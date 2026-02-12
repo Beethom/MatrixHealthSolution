@@ -1,0 +1,26 @@
+@model IEnumerable<MatrixHealthSolution.Models.Service>
+
+<section id="services" class="services">
+    <div class="container">
+        <h2 class="section-title">Our Medical & Wellness Services</h2>
+
+        @if (Model == null || !Model.Any())
+        {
+            <p>No services are available at the moment. Please check back later.</p>
+        }
+        else
+        {
+            <div class="services-grid">
+                @foreach (var service in Model)
+                {
+                    <div class="service-card">
+                        <h3>@service.Name</h3>
+                        <p>@service.Description</p>
+                        <p><strong>$@service.Price</strong></p>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+

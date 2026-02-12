@@ -1,0 +1,200 @@
+@model IEnumerable<MatrixHealthSolution.Models.Order>
+
+@{
+    ViewData["Title"] = "Orders Dashboard";
+
+    string Badge(string status)
+    {
+        status = (status ?? "").ToLower();
+        return status switch
+        {
+            "pending" => "background:#fff8e1; color:#8a6d00; border:1px solid #ffd700;",
+            "paid" => "background:#e8f5e8; color:#2e7d32; border:1px solid #81c784;",
+            "shipped" => "background:#e3f2fd; color:#0d47a1; border:1px solid #90caf9;",
+            "cancelled" => "background:#ffebee; color:#b71c1c; border:1px solid #ef9a9a;",
+            "refunded" => "background:#f3e5f5; color:#6a1b9a; border:1px solid #ce93d8;",
+            _ => "background:#f5f5f5; color:#333; border:1px solid #ddd;"
+        };
+    }
+}
+
+<section class="services">
+    <div class="container">
+        <h2 class="section-title">Orders Dashboard</h2>
+
+        <div style="display:flex; justify-content demonstrate?"></div>
+
+        <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; margin-bottom:18px;">
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <a class="btn btn-primary" asp-area="Admin" asp-controller="Orders" asp-action="Index">Refresh</a>
+            </div>
+            <div style="color:#666; font-size:0.95rem;">
+                Total: <strong>@Model.Count()</strong>
+            </div>
+        </div>
+
+        @if (TempData["Error"] != null)
+        {
+            <div style="background:#ffebee; border:1px solid #ef9a9a; padding:12px; border-radius:10px; margin-bottom:16px;">
+                @TempData["Error"]
+            </div>
+        }
+        @if (TempData["Success"] != null)
+        {
+            <div style="background:#e8f5e8; border:1px solid #81c784; padding:12px; border-radius:10px; margin-bottom:16px;">
+                @TempData["Success"]
+            </div>
+        }
+
+        <!-- Filters -->
+        <form method="get" asp-area="Admin" asp-controller="Orders" asp-action="Index"
+              class="service-card"
+              style="max-width:1100px; margin:0 auto 20px auto; padding:18px;">
+
+            <h3 style="margin-bottom:12px; color:#2E7D32;">Filters</h3>
+
+            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:14px;">
+                <div class="form-group">
+                    <label>Date From</label>
+                    <input type="date" name="from" value="@ViewBag.from" />
+                </div>
+
+                <div class="form-group">
+                    <label>Date To</label>
+                    <input type="date" name="to" value="@ViewBag.to" />
+                </div>
+
+                <div class="form-group">
+                    <label>Status</label>
+                    @{
+                        var statusQ = (string)ViewBag.status;
+                    }
+                    <select name="status">
+                        <option value="" selected="@(string.IsNullOrWhiteSpace(statusQ))">All</option>
+                        <option value="Pending" selected="@(statusQ == "Pending")">Pending</option>
+                        <option value="Paid" selected="@(statusQ == "Paid")">Paid</option>
+                        <option value="Shipped" selected="@(statusQ == "Shipped")">Shipped</option>
+                        <option value="Cancelled" selected="@(statusQ == "Cancelled")">Cancelled</option>
+                        <option value="Refunded" selected="@(statusQ == "Refunded")">Refunded</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Search</label>
+                    <input type="text" name="q"
+                           placeholder="Name, email, order id..."
+                           value="@ViewBag.q" />
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+                <button type="submit" class="btn btn-primary">Apply</button>
+
+                <a class="btn btn-secondary"
+                   asp-area="Admin"
+                   asp-controller="Orders"
+                   asp-action="Index">
+                    Clear
+                </a>
+
+                <a class="btn btn-secondary"
+                   asp-area="Admin"
+                   asp-controller="Orders"
+                   asp-action="Index"
+                   asp-route-status="Pending">
+                    Pending Only
+                </a>
+
+                <a class="btn btn-secondary"
+                   asp-area="Admin"
+                   asp-controller="Orders"
+                   asp-action="Index"
+                   asp-route-status="Paid">
+                    Paid Only
+                </a>
+            </div>
+        </form>
+
+        <!-- Table -->
+        <div class="service-card" style="max-width:1100px; margin:0 auto; overflow:auto; padding:0;">
+            <div style="padding:16px 16px 0 16px;">
+                <h3 style="color:#2E7D32;">Orders</h3>
+                <p style="color:#777; margin-top:6px;">Manage payment state, shipping, tracking, and order details.</p>
+            </div>
+
+            <table style="width:100%; border-collapse:collapse; margin-top:10px;">
+                <thead>
+                <tr style="background:#f5f5f5; text-align:left;">
+                    <th style="padding:12px;">Order</th>
+                    <th style="padding:12px;">Date</th>
+                    <th style="padding:12px;">Customer</th>
+                    <th style="padding:12px;">Total</th>
+                    <th style="padding:12px;">Payment</th>
+                    <th style="padding:12px;">Status</th>
+                    <th style="padding:12px; width:180px;">Actions</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="7" style="padding:18px; text-align:center; color:#666;">No orders found.</td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var o in Model)
+                    {
+                        var status = o.Status ?? "Pending";
+                        var paymentStatus = o.Payment?.Status ?? "Unpaid";
+
+                        <tr style="border-top:1px solid #eee;">
+                            <td style="padding:12px;"><strong>#@o.Id</strong></td>
+
+                            <td style="padding:12px;">
+                                @o.CreatedAt.ToLocalTime().ToString("MMM dd, yyyy h:mm tt")
+                            </td>
+
+                            <td style="padding:12px;">
+                                <div style="font-weight:700;">@($"{o.FirstName} {o.LastName}".Trim())</div>
+                                <div style="color:#666;">@o.Email</div>
+                            </td>
+
+                            <td style="padding:12px; font-weight:700;">$@o.Total.ToString("0.00")</td>
+
+                            <td style="padding:12px;">
+                                <span style="padding:6px 10px; border-radius:999px; background:#f5f5f5; border:1px solid #ddd;">
+                                    @paymentStatus
+                                </span>
+                            </td>
+
+                            <td style="padding:12px;">
+                                <span style="padding:6px 10px; border-radius:999px; font-size:0.9rem; display:inline-block; @Badge(status)">
+                                    @status
+                                </span>
+                            </td>
+
+                            <td style="padding:12px;">
+                                <a class="btn btn-secondary"
+                                   asp-area="Admin"
+                                   asp-controller="Orders"
+                                   asp-action="Details"
+                                   asp-route-id="@o.Id">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<style>
+    @@media (max-width: 900px) {
+        table { font-size: 0.95rem; }
+    }
+</style>

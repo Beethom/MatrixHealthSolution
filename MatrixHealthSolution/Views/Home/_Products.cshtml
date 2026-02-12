@@ -1,0 +1,60 @@
+@model IEnumerable<MatrixHealthSolution.Models.Product>
+
+<h2 class="section-title">Products</h2>
+
+<div class="services-grid">
+@foreach (var p in Model)
+{
+    <div class="service-card">
+
+        <!-- PRODUCT IMAGE -->
+        <img
+            src="@(string.IsNullOrWhiteSpace(p.ImagePath)
+                ? Url.Content("~/images/placeholder.png")
+                : Url.Content(p.ImagePath))"
+            alt="@p.Name"
+            style="
+                width:100%;
+                height:220px;
+                object-fit:contain;
+                background:#f5f5f5;
+                border-radius:12px;
+                margin-bottom:12px;
+            "
+        />
+
+        <!-- PRODUCT INFO -->
+        <h3>@p.Name</h3>
+        <p>@p.Description</p>
+        <p><strong>$@p.Price</strong></p>
+
+        <!-- ✅ ADD TO CART + QTY -->
+        <form asp-controller="Cart" asp-action="Add" method="post" style="margin-top:12px;">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@p.Id" />
+
+            <div class="form-group" style="margin-bottom:10px;">
+                <label style="font-weight:600;">Quantity</label>
+                <select name="qty">
+                    @for (int i = 1; i <= 10; i++)
+                    {
+                        <option value="@i">@i</option>
+                    }
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width:100%;">
+                Add to Cart
+            </button>
+        </form>
+
+        <!-- ✅ VIEW CART -->
+        <a asp-controller="Cart" asp-action="Index"
+           class="btn btn-secondary"
+           style="width:100%; margin-top:8px;">
+            View Cart
+        </a>
+
+    </div>
+}
+</div>

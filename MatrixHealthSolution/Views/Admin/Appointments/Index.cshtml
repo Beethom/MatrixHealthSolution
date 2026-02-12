@@ -1,0 +1,295 @@
+@model IEnumerable<MatrixHealthSolution.Models.Appointment>
+
+@{
+    ViewData["Title"] = "Appointments Dashboard";
+
+    string GetBadge(string status)
+    {
+        status = status ?? "";
+
+        return status.ToLower() switch
+        {
+            "pending" => "background:#fff8e1; color:#8a6d00; border:1px solid #ffd700;",
+            "confirmed" => "background:#e8f5e8; color:#2e7d32; border:1px solid #81c784;",
+            "cancelled" => "background:#ffebee; color:#b71c1c; border:1px solid #ef9a9a;",
+            "completed" => "background:#e3f2fd; color:#0d47a1; border:1px solid #90caf9;",
+            _ => "background:#f5f5f5; color:#333; border:1px solid #ddd;"
+        };
+    }
+
+    string FormatMoney(decimal amount) => amount.ToString("0.00");
+}
+
+<section class="services">
+    <div class="container">
+        <h2 class="section-title">Appointments Dashboard</h2>
+
+        <!-- Top actions -->
+        <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; margin-bottom:18px;">
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <a class="btn btn-primary" asp-area="Admin" asp-controller="Appointments" asp-action="Index">
+                    Refresh
+                </a>
+
+                <a class="btn btn-secondary" asp-area="" asp-controller="Appointments" asp-action="Book">
+                    + Book Test Appointment
+                </a>
+            </div>
+
+            <div style="color:#666; font-size:0.95rem;">
+                Total: <strong>@Model.Count()</strong>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <form method="get" asp-area="Admin" asp-controller="Appointments" asp-action="Index"
+              class="service-card"
+              style="max-width:1100px; margin:0 auto 20px auto; padding:18px;">
+
+            <h3 style="margin-bottom:12px; color:#2E7D32;">Filters</h3>
+
+            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:14px;">
+                <!-- Date From -->
+                <div class="form-group">
+                    <label>Date From</label>
+                    <input type="date" name="from" value="@Context.Request.Query["from"]" />
+                </div>
+
+                <!-- Date To -->
+                <div class="form-group">
+                    <label>Date To</label>
+                    <input type="date" name="to" value="@Context.Request.Query["to"]" />
+                </div>
+
+                <!-- Status -->
+                <div class="form-group">
+                    <label>Status</label>
+                    <select name="status">
+                        @{
+                            var statusQ = Context.Request.Query["status"].ToString();
+                        }
+                        <option value="" selected="@(string.IsNullOrWhiteSpace(statusQ))">All</option>
+                        <option value="Pending" selected="@(statusQ == "Pending")">Pending</option>
+                        <option value="Confirmed" selected="@(statusQ == "Confirmed")">Confirmed</option>
+                        <option value="Cancelled" selected="@(statusQ == "Cancelled")">Cancelled</option>
+                        <option value="Completed" selected="@(statusQ == "Completed")">Completed</option>
+                    </select>
+                </div>
+
+                <!-- Search -->
+                <div class="form-group">
+                    <label>Search</label>
+                    <input type="text" name="q"
+                           placeholder="Name, email, appt id..."
+                           value="@Context.Request.Query["q"]" />
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+                <button type="submit" class="btn btn-primary">Apply</button>
+
+                <a class="btn btn-secondary"
+                   asp-area="Admin"
+                   asp-controller="Appointments"
+                   asp-action="Index">
+                    Clear
+                </a>
+
+                <a class="btn btn-secondary"
+                   asp-area="Admin"
+                   asp-controller="Appointments"
+                   asp-action="Index"
+                   asp-route-status="Pending">
+                    Pending Only
+                </a>
+
+                <a class="btn btn-secondary"
+                   asp-area="Admin"
+                   asp-controller="Appointments"
+                   asp-action="Index"
+                   asp-route-status="Confirmed">
+                    Confirmed Only
+                </a>
+            </div>
+        </form>
+
+        <!-- Table -->
+        <div class="service-card" style="max-width:1100px; margin:0 auto; overflow:auto; padding:0;">
+            <div style="padding:16px 16px 0 16px;">
+                <h3 style="color:#2E7D32;">Appointments</h3>
+                <p style="color:#777; margin-top:6px;">
+                    Manage deposits, status updates, cancellations, and details.
+                </p>
+            </div>
+
+            <table style="width:100%; border-collapse:collapse; margin-top:10px;">
+                <thead>
+                    <tr style="background:#f5f5f5; text-align:left;">
+                        <th style="padding:12px;">ID</th>
+                        <th style="padding:12px;">Date + Time</th>
+                        <th style="padding:12px;">Service</th>
+                        <th style="padding:12px;">Patient</th>
+                        <th style="padding:12px;">Deposit</th>
+                        <th style="padding:12px;">Status</th>
+                        <th style="padding:12px; width:260px;">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="7" style="padding:18px; text-align:center; color:#666;">
+                                No appointments found.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var a in Model)
+                        {
+                            var status = a.Status ?? "Pending";
+
+                            <tr style="border-top:1px solid #eee;">
+                                <!-- ID -->
+                                <td style="padding:12px;">
+                                    <strong>#@a.Id</strong>
+                                </td>
+
+                                <!-- Date + Time -->
+                                <td style="padding:12px;">
+                                    @if (a.ScheduledAt != default)
+                                    {
+                                        <div><strong>@a.ScheduledAt.ToString("MMM dd, yyyy")</strong></div>
+                                        <div style="color:#666;">@a.ScheduledAt.ToString("h:mm tt")</div>
+                                    }
+                                    else
+                                    {
+                                        <span style="color:#999;">(missing)</span>
+                                    }
+                                </td>
+
+                                <!-- Service -->
+                                <td style="padding:12px;">
+                                    <div style="font-weight:600;">
+                                        @(a.Service?.Name ?? $"Service #{a.ServiceId}")
+                                    </div>
+                                </td>
+
+                                <!-- Patient -->
+                                <td style="padding:12px;">
+                                    <div style="font-weight:600;">
+                                        @($"{a.FirstName} {a.LastName}".Trim())
+                                    </div>
+                                    <div style="color:#666;">@a.Email</div>
+                                </td>
+
+                                <!-- Deposit -->
+                                <td style="padding:12px;">
+                                    <div>
+                                        <strong>$@FormatMoney(a.DepositAmount)</strong>
+                                    </div>
+
+                                    @if (a.DepositPaid)
+                                    {
+                                        <div style="color:#2E7D32; font-weight:600;">Paid</div>
+                                    }
+                                    else
+                                    {
+                                        <div style="color:#b00020; font-weight:600;">Not Paid</div>
+                                    }
+                                </td>
+
+                                <!-- Status -->
+                                <td style="padding:12px;">
+                                    <span style="padding:6px 10px; border-radius:999px; font-size:0.9rem; display:inline-block; @GetBadge(status)">
+                                        @status
+                                    </span>
+                                </td>
+
+                                <!-- Actions -->
+                                <td style="padding:12px;">
+                                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+
+                                        <a class="btn btn-secondary"
+                                           asp-area="Admin"
+                                           asp-controller="Appointments"
+                                           asp-action="Details"
+                                           asp-route-id="@a.Id">
+                                            View
+                                        </a>
+
+                                        <a class="btn btn-secondary"
+                                           asp-area="Admin"
+                                           asp-controller="Appointments"
+                                           asp-action="Reschedule"
+                                           asp-route-id="@a.Id">
+                                            Reschedule
+                                        </a>
+
+                                        @if (!a.DepositPaid)
+                                        {
+                                           <form asp-area="Admin"
+      asp-controller="Appointments"
+      asp-action="MarkDepositPaid"
+      asp-route-id="@a.Id"
+      method="post"
+      style="display:inline;">
+    @Html.AntiForgeryToken()
+    <button type="submit" class="btn btn-primary">Mark Paid</button>
+</form>
+
+                                        }
+
+                                        @if (status != "Cancelled")
+                                        {
+                                            <form asp-area="Admin"
+      asp-controller="Appointments"
+      asp-action="Cancel"
+      asp-route-id="@a.Id"
+      method="post"
+      style="display:inline;"
+      onsubmit="return confirm('Cancel this appointment?');">
+    @Html.AntiForgeryToken()
+    <button type="submit" class="btn btn-secondary">Cancel</button>
+</form>
+
+                                        }
+
+                                        @if (status != "Completed" && status != "Cancelled")
+                                        {
+                                            <form asp-area="Admin"
+      asp-controller="Appointments"
+      asp-action="Complete"
+      asp-route-id="@a.Id"
+      method="post"
+      style="display:inline;"
+      onsubmit="return confirm('Mark as completed?');">
+    @Html.AntiForgeryToken()
+    <button type="submit" class="btn btn-secondary">Completed</button>
+</form>
+
+                                        }
+
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div style="max-width:1100px; margin:12px auto 0 auto; color:#777; font-size:0.95rem;">
+            Tip: Pending = deposit not paid. Confirmed = deposit paid. Cancelled frees the slot.
+        </div>
+
+    </div>
+</section>
+
+<style>
+    /* Small screen improvements */
+    @@media (max-width: 900px) {
+        table { font-size: 0.95rem; }
+    }
+</style>

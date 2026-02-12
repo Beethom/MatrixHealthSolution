@@ -1,0 +1,33 @@
+@using MatrixHealthSolution.Models.Enums
+@model IEnumerable<MatrixHealthSolution.Models.Membership>
+
+@{
+    ViewData["Title"] = "Memberships";
+}
+
+<section class="membership">
+    <div class="container">
+        <h2 class="section-title">Membership Plans</h2>
+
+        <div class="membership-cards">
+            @foreach (var m in Model)
+            {
+                <div class="membership-card">
+                    <h3>@m.Name</h3>
+
+                    <div class="price">
+                        $@m.Price
+                        <span style="font-size: 1rem;">
+                            / @(m.Period == MembershipPeriod.Monthly ? "month" :
+                                 m.Period == MembershipPeriod.ThreeMonths ? "3 months" : "year")
+                        </span>
+                    </div>
+
+                    <p class="mb-3">@m.Description</p>
+
+                    <a class="btn btn-primary" href="#">Choose Plan</a>
+                </div>
+            }
+        </div>
+    </div>
+</section>

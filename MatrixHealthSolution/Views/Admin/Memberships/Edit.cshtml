@@ -1,0 +1,48 @@
+@model MatrixHealthSolution.Models.Membership
+@using MatrixHealthSolution.Models.Enums
+
+@{
+    ViewData["Title"] = "Edit Membership";
+}
+
+<section class="services">
+    <div class="container">
+        <h2 class="section-title">Edit Membership</h2>
+
+        <form asp-area="Admin" asp-controller="Memberships" asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+
+            <div class="form-group">
+                <label asp-for="Name"></label>
+                <input asp-for="Name" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Description"></label>
+                <textarea asp-for="Description" rows="3"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Price"></label>
+                <input asp-for="Price" />
+                <span asp-validation-for="Price" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Period"></label>
+                <select asp-for="Period" asp-items="Html.GetEnumSelectList<MembershipPeriod>()"></select>
+                <span asp-validation-for="Period" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="IsActive"></label>
+                <input asp-for="IsActive" type="checkbox" />
+            </div>
+
+            <button class="btn btn-primary" type="submit">Update</button>
+            <a class="btn btn-secondary" asp-area="Admin" asp-controller="Memberships" asp-action="Index">Cancel</a>
+        </form>
+    </div>
+</section>

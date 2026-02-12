@@ -1,0 +1,226 @@
+@model MatrixHealthSolution.Models.ViewModels.RescheduleAppointmentVM
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Reschedule Appointment";
+    string FormatTime(TimeSpan t)
+    {
+        var d = DateTime.Today.Add(t);
+        return d.ToString("h:mm tt", CultureInfo.InvariantCulture);
+    }
+}
+
+<section class="services">
+    <div class="container">
+        <h2 class="section-title">Reschedule Appointment</h2>
+
+        @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+        {
+            <div style="background:#ffebee; border:1px solid #ef9a9a; padding:12px; border-radius:10px; margin-bottom:16px;">
+                <strong style="color:#b71c1c;">@err</strong>
+            </div>
+        }
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div style="background:#fff8e1; border:1px solid #ffd700; padding:12px; border-radius:10px; margin-bottom:16px;">
+                <strong>Please fix the errors below.</strong>
+                <div asp-validation-summary="All"></div>
+            </div>
+        }
+
+        <div class="service-card" style="max-width:900px; margin:0 auto 18px auto;">
+            <div style="display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;">
+                <div>
+                    <div style="font-weight:700; font-size:1.05rem;">Appointment #@Model.Id</div>
+                    <div style="color:#666; margin-top:4px;">
+                        @(!string.IsNullOrWhiteSpace(Model.PatientName) ? Model.PatientName : "Patient")
+                        @if (!string.IsNullOrWhiteSpace(Model.PatientEmail))
+                        {
+                            <span>• @Model.PatientEmail</span>
+                        }
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <a class="btn btn-secondary"
+                       asp-area="Admin"
+                       asp-controller="Appointments"
+                       asp-action="Details"
+                       asp-route-id="@Model.Id">
+                        Back to Details
+                    </a>
+
+                    <a class="btn btn-secondary"
+                       asp-area="Admin"
+                       asp-controller="Appointments"
+                       asp-action="Index">
+                        Back to Dashboard
+                    </a>
+                </div>
+            </div>
+
+            <div style="margin-top:12px; padding:12px; border-radius:12px; background:#f5f5f5;">
+                <div style="display:flex; flex-wrap:wrap; gap:18px;">
+                    <div>
+                        <div style="color:#666; font-size:0.9rem;">Duration</div>
+                        <div style="font-weight:700;">@Model.DurationMinutes min</div>
+                    </div>
+                    <div>
+                        <div style="color:#666; font-size:0.9rem;">Tip</div>
+                        <div style="font-weight:600;">Times update when you change Date or Service</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <form asp-area="Admin"
+              asp-controller="Appointments"
+              asp-action="Reschedule"
+              asp-route-id="@Model.Id"
+              method="post"
+              class="service-card"
+              style="max-width:900px; margin:0 auto;">
+
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="DurationMinutes" />
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+
+                <!-- Service -->
+                <div class="form-group">
+                    <label asp-for="ServiceId">Service</label>
+                    <select asp-for="ServiceId" asp-items="Model.Services" id="ServiceId">
+                        <option value="">-- Select a service --</option>
+                    </select>
+                    <span asp-validation-for="ServiceId" style="color:#b00020;"></span>
+                </div>
+
+                <!-- Date -->
+                <div class="form-group">
+                    <label asp-for="Date">Date</label>
+                    <input asp-for="Date" type="date" id="Date" />
+                    <span asp-validation-for="Date" style="color:#b00020;"></span>
+                </div>
+
+                <!-- Time -->
+                <div class="form-group">
+                    <label asp-for="StartTime">Time</label>
+                    <select asp-for="StartTime" id="StartTime">
+                        <option value="">-- Select a time --</option>
+                        @foreach (var t in Model.AvailableTimes)
+                        {
+                            <option value="@t">@FormatTime(t)</option>
+                        }
+                    </select>
+                    <span asp-validation-for="StartTime" style="color:#b00020;"></span>
+                </div>
+
+                <!-- Duration display (read-only) -->
+                <div class="form-group">
+                    <label>Duration</label>
+                    <input type="text" value="@Model.DurationMinutes min" readonly />
+                    <small style="color:#666;">This is based on the service duration.</small>
+                </div>
+            </div>
+
+            <div class="hero-buttons" style="margin-top:18px;">
+                <button type="submit" class="btn btn-primary">Save Reschedule</button>
+
+                <a class="btn btn-secondary"
+                   asp-area="Admin"
+                   asp-controller="Appointments"
+                   asp-action="Details"
+                   asp-route-id="@Model.Id">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (function () {
+            const dateInput = document.getElementById("Date");
+            const serviceSelect = document.getElementById("ServiceId");
+            const timeSelect = document.getElementById("StartTime");
+            const durationHidden = document.getElementById("DurationMinutes");
+
+            // If your hidden duration input doesn't have an id, the asp-for creates id="DurationMinutes" automatically.
+            // If it doesn't, uncomment next line and set correctly:
+            // const durationHidden = document.querySelector('input[name="DurationMinutes"]');
+
+            if (!dateInput || !serviceSelect || !timeSelect || !durationHidden) return;
+
+            function toDisplayTime(hhmm) {
+                // hhmm: "09:00"
+                const [hh, mm] = hhmm.split(":").map(Number);
+                const d = new Date();
+                d.setHours(hh, mm, 0, 0);
+                return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+            }
+
+            async function refreshTimes() {
+                const date = dateInput.value;          // yyyy-mm-dd
+                const serviceId = serviceSelect.value; // "3"
+                const duration = durationHidden.value; // "60"
+                const apptId = @Model.Id;              // exclude self
+
+                // If no date or service yet, just reset time options (don't clear other fields)
+                if (!date || !serviceId) {
+                    const prev = timeSelect.value;
+                    timeSelect.innerHTML = `<option value="">-- Select a time --</option>`;
+                    if (prev && [...timeSelect.options].some(o => o.value === prev)) {
+                        timeSelect.value = prev;
+                    }
+                    return;
+                }
+
+                const previous = timeSelect.value;
+
+                const url = `/Admin/Appointments/AvailableTimes?date=${encodeURIComponent(date)}&durationMinutes=${encodeURIComponent(duration)}&excludeAppointmentId=${encodeURIComponent(apptId)}`;
+                const res = await fetch(url);
+                if (!res.ok) return;
+
+                const times = await res.json(); // ["09:00", "09:30", ...]
+
+                timeSelect.innerHTML = `<option value="">-- Select a time --</option>`;
+
+                times.forEach(t => {
+                    // Controller returns "HH:mm" - model binder expects TimeSpan like "HH:mm:ss"
+                    const value = t + ":00";
+
+                    const opt = document.createElement("option");
+                    opt.value = value;
+                    opt.textContent = toDisplayTime(t);
+                    timeSelect.appendChild(opt);
+                });
+
+                // reselect previous if still present
+                if (previous && [...timeSelect.options].some(o => o.value === previous)) {
+                    timeSelect.value = previous;
+                }
+            }
+
+            // Change date -> refresh times
+            dateInput.addEventListener("change", refreshTimes);
+
+            // Change service -> clear time and refresh times
+            serviceSelect.addEventListener("change", () => {
+                timeSelect.value = "";
+                // Duration might change by service; we keep it server-driven on submit.
+                // If you later want duration to refresh live, we'll add an endpoint.
+                refreshTimes();
+            });
+
+            // On load, if date+service present, pull latest slots
+            if (dateInput.value && serviceSelect.value) {
+                refreshTimes();
+            }
+        })();
+    </script>
+}

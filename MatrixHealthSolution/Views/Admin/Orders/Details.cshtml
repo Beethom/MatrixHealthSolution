@@ -1,0 +1,141 @@
+@model MatrixHealthSolution.Models.Order
+
+@{
+    ViewData["Title"] = $"Order #{Model.Id}";
+    var paymentStatus = Model.Payment?.Status ?? "Unpaid";
+}
+
+<section class="services">
+    <div class="container">
+        <h2 class="section-title">Order #@Model.Id</h2>
+
+        @if (TempData["Error"] != null)
+        {
+            <div style="background:#ffebee; border:1px solid #ef9a9a; padding:12px; border-radius:10px; margin-bottom:16px;">
+                @TempData["Error"]
+            </div>
+        }
+        @if (TempData["Success"] != null)
+        {
+            <div style="background:#e8f5e8; border:1px solid #81c784; padding:12px; border-radius:10px; margin-bottom:16px;">
+                @TempData["Success"]
+            </div>
+        }
+
+        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
+            <a class="btn btn-secondary" asp-area="Admin" asp-controller="Orders" asp-action="Index">← Back</a>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1.2fr 0.8fr; gap:16px;">
+            <!-- LEFT: customer + items -->
+            <div class="service-card">
+                <h3 style="color:#2E7D32;">Customer & Shipping</h3>
+
+                <div style="margin-top:10px; color:#555; line-height:1.6;">
+                    <div><strong>Name:</strong> @Model.FirstName @Model.LastName</div>
+                    <div><strong>Email:</strong> @Model.Email</div>
+                    <div><strong>Phone:</strong> @(string.IsNullOrWhiteSpace(Model.Phone) ? "—" : Model.Phone)</div>
+
+                    <hr style="margin:12px 0;" />
+
+                    <div><strong>Address:</strong></div>
+                    <div>@Model.Address1</div>
+                    @if (!string.IsNullOrWhiteSpace(Model.Address2))
+                    {
+                        <div>@Model.Address2</div>
+                    }
+                    <div>@Model.City, @Model.State @Model.Zip</div>
+                    <div>@(string.IsNullOrWhiteSpace(Model.Country) ? "USA" : Model.Country)</div>
+                </div>
+
+                <hr style="margin:16px 0;" />
+
+                <h3 style="color:#2E7D32;">Items</h3>
+                <div style="margin-top:10px; display:grid; gap:10px;">
+                    @foreach (var item in Model.Items)
+                    {
+                        <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding-bottom:10px;">
+                            <div>
+                                <div style="font-weight:800;">@item.ProductName</div>
+                                <div style="color:#777;">Qty: @item.Quantity • $@item.UnitPrice.ToString("0.00")</div>
+                            </div>
+                            <div style="font-weight:800;">$@item.LineTotal.ToString("0.00")</div>
+                        </div>
+                    }
+                </div>
+
+                <div style="margin-top:14px; padding:12px; background:#f5f5f5; border-radius:12px;">
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>Subtotal</span><strong>$@Model.Subtotal.ToString("0.00")</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-top:6px;">
+                        <span>Shipping</span><strong>$@Model.ShippingCost.ToString("0.00")</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-top:6px;">
+                        <span>Tax</span><strong>$@Model.Tax.ToString("0.00")</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:1.1rem;">
+                        <span>Total</span><strong>$@Model.Total.ToString("0.00")</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: status actions -->
+            <div class="service-card">
+                <h3 style="color:#2E7D32;">Status</h3>
+
+                <div style="margin-top:10px; color:#555; line-height:1.6;">
+                    <div><strong>Created:</strong> @Model.CreatedAt.ToLocalTime().ToString("MMM dd, yyyy h:mm tt")</div>
+                    <div><strong>Order Status:</strong> @Model.Status</div>
+                    <div><strong>Payment:</strong> @paymentStatus</div>
+                    <div><strong>Transaction:</strong> @(Model.Payment?.TransactionId ?? "—")</div>
+                </div>
+
+                <hr style="margin:16px 0;" />
+
+                <h4 style="margin-bottom:10px;">Update Order Status</h4>
+                <form asp-area="Admin" asp-controller="Orders" asp-action="UpdateStatus" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+
+                    <div class="form-group">
+                        <select name="status">
+                            <option value="Pending" selected="@(Model.Status == "Pending")">Pending</option>
+                            <option value="Paid" selected="@(Model.Status == "Paid")">Paid</option>
+                            <option value="Shipped" selected="@(Model.Status == "Shipped")">Shipped</option>
+                            <option value="Cancelled" selected="@(Model.Status == "Cancelled")">Cancelled</option>
+                            <option value="Refunded" selected="@(Model.Status == "Refunded")">Refunded</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="margin-top:10px;">
+                        Save Status
+                    </button>
+                </form>
+
+                <hr style="margin:16px 0;" />
+
+                <h4 style="margin-bottom:10px;">Tracking Number</h4>
+                <form asp-area="Admin" asp-controller="Orders" asp-action="UpdateTracking" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+
+                    <div class="form-group">
+                        <input name="trackingNumber" value="@Model.TrackingNumber" placeholder="UPS / USPS / FedEx..." />
+                    </div>
+
+                    <button type="submit" class="btn btn-secondary" style="margin-top:10px;">
+                        Save Tracking
+                    </button>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.TrackingNumber))
+                    {
+                        <div style="margin-top:10px; color:#2E7D32; font-weight:700;">
+                            Current: @Model.TrackingNumber
+                        </div>
+                    }
+                </form>
+            </div>
+        </div>
+    </div>
+</section>

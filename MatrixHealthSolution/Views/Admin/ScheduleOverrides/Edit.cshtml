@@ -1,0 +1,90 @@
+@model MatrixHealthSolution.Models.ScheduleOverride
+
+@{
+    ViewData["Title"] = "Edit Schedule Override";
+}
+
+<section class="services">
+    <div class="container">
+        <h2 class="section-title">Edit Schedule Override</h2>
+
+        <form asp-area="Admin" asp-controller="ScheduleOverrides" asp-action="Edit" method="post"
+              class="service-card" style="max-width:900px; margin:0 auto;">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+
+            <div asp-validation-summary="All" style="color:#b00020; margin-bottom:10px;"></div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                <div class="form-group">
+                    <label asp-for="Date">Date</label>
+                    <input asp-for="Date" type="date" />
+                    <span asp-validation-for="Date" style="color:#b00020;"></span>
+                </div>
+
+                <div class="form-group" style="display:flex; align-items:center; gap:10px; margin-top:30px;">
+                    <input asp-for="IsClosed" type="checkbox" style="width:auto;" id="isClosed" />
+                    <label for="isClosed" style="margin:0;">Closed all day</label>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="OpenTime">Open Time</label>
+                    <input asp-for="OpenTime" type="time" step="60" id="openTime" />
+                    <span asp-validation-for="OpenTime" style="color:#b00020;"></span>
+                    <div style="font-size:0.9rem; color:#777; margin-top:6px;">Format: HH:mm</div>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="CloseTime">Close Time</label>
+                    <input asp-for="CloseTime" type="time" step="60" id="closeTime" />
+                    <span asp-validation-for="CloseTime" style="color:#b00020;"></span>
+                    <div style="font-size:0.9rem; color:#777; margin-top:6px;">Format: HH:mm</div>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top:16px;">
+                <label asp-for="Note">Note (optional)</label>
+                <input asp-for="Note" placeholder="Holiday, staff training, special hours..." />
+                <span asp-validation-for="Note" style="color:#b00020;"></span>
+            </div>
+
+            <div class="hero-buttons" style="margin-top:18px;">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a class="btn btn-secondary"
+                   asp-area="Admin"
+                   asp-controller="ScheduleOverrides"
+                   asp-action="Index">Cancel</a>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const chk = document.getElementById("isClosed");
+            const open = document.getElementById("openTime");
+            const close = document.getElementById("closeTime");
+
+            function toggle() {
+                const closed = chk.checked;
+
+                open.disabled = closed;
+                close.disabled = closed;
+
+                if (closed) {
+                    open.value = "";
+                    close.value = "";
+                } else {
+                    // optional: fill defaults only if blank
+                    if (!open.value) open.value = "09:00";
+                    if (!close.value) close.value = "17:00";
+                }
+            }
+
+            chk.addEventListener("change", toggle);
+            toggle();
+        })();
+    </script>
+}

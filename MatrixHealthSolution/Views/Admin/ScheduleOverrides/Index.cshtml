@@ -1,0 +1,118 @@
+@model IEnumerable<MatrixHealthSolution.Models.ScheduleOverride>
+
+@{
+    ViewData["Title"] = "Schedule Overrides";
+}
+
+<section class="services">
+    <div class="container">
+        <h2 class="section-title">Schedule Overrides</h2>
+
+        <a class="btn btn-primary mb-3"
+           asp-area="Admin"
+           asp-controller="ScheduleOverrides"
+           asp-action="Create">
+            + Add Override
+        </a>
+
+        <div class="service-card" style="overflow:auto; padding:0;">
+            <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr style="background:#f5f5f5;">
+                        <th style="padding:12px;">Date</th>
+                        <th style="padding:12px;">Status</th>
+                        <th style="padding:12px;">Hours</th>
+                        <th style="padding:12px;">Note</th>
+                        <th style="padding:12px; width:220px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="5" style="padding:18px; text-align:center; color:#666;">
+                                No overrides yet.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var o in Model)
+                        {
+                            // DateOnly -> DateTime -> formatted string
+                            var dateStr = new DateTime(o.Date.Year, o.Date.Month, o.Date.Day).ToString("yyyy-MM-dd");
+
+                            // Use defaults if null (important because OpenTime/CloseTime are TimeOnly?)
+                            var open = o.OpenTime ?? new TimeOnly(9, 0);
+                            var close = o.CloseTime ?? new TimeOnly(17, 0);
+
+                            // TimeOnly -> string without calling TimeOnly.ToString("HH:mm") (avoids your ToString overload issues)
+                            var openStr = new DateTime(2000, 1, 1, open.Hour, open.Minute, 0).ToString("HH:mm");
+                            var closeStr = new DateTime(2000, 1, 1, close.Hour, close.Minute, 0).ToString("HH:mm");
+
+                            <tr style="border-top:1px solid #eee;">
+                                <td style="padding:12px;">
+                                    <strong>@dateStr</strong>
+                                </td>
+
+                                <td style="padding:12px;">
+                                    @if (o.IsClosed)
+                                    {
+                                        <span style="padding:6px 10px; border-radius:999px; background:#ffebee; color:#b71c1c; border:1px solid #ef9a9a;">
+                                            Closed
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span style="padding:6px 10px; border-radius:999px; background:#e8f5e8; color:#2e7d32; border:1px solid #81c784;">
+                                            Open
+                                        </span>
+                                    }
+                                </td>
+
+                                <td style="padding:12px;">
+                                    @if (o.IsClosed)
+                                    {
+                                        <span style="color:#777;">—</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@openStr - @closeStr</span>
+                                    }
+                                </td>
+
+                                <td style="padding:12px; color:#666;">
+                                    @(string.IsNullOrWhiteSpace(o.Note) ? "—" : o.Note)
+                                </td>
+
+                                <td style="padding:12px;">
+                                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                        <a class="btn btn-secondary"
+                                           asp-area="Admin"
+                                           asp-controller="ScheduleOverrides"
+                                           asp-action="Edit"
+                                           asp-route-id="@o.Id">
+                                            Edit
+                                        </a>
+
+                                        <a class="btn btn-secondary"
+                                           asp-area="Admin"
+                                           asp-controller="ScheduleOverrides"
+                                           asp-action="Delete"
+                                           asp-route-id="@o.Id">
+                                            Delete
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div style="margin-top:12px; color:#777;">
+            Tip: Use “Closed” for holidays. Use custom hours to shorten/extend specific days.
+        </div>
+    </div>
+</section>

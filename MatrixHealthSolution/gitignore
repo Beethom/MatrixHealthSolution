@@ -1,0 +1,26 @@
+# Build folders
+bin/
+obj/
+.vs/
+.vscode/
+
+# User files
+*.user
+*.suo
+
+# Database files
+*.db
+*.sqlite
+
+# Secrets - IMPORTANT!
+appsettings.Development.json
+appsettings.Local.json
+
+# Logs
+*.log
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db

@@ -1,0 +1,33 @@
+@model MatrixHealthSolution.Models.Membership
+@using MatrixHealthSolution.Models.Enums
+
+@{
+    ViewData["Title"] = "Delete Membership";
+}
+
+<section class="services">
+    <div class="container">
+        <h2 class="section-title">Delete Membership</h2>
+
+        <div class="service-card">
+            <h3>@Model.Name</h3>
+            <p>@Model.Description</p>
+            <p><strong>$@Model.Price</strong></p>
+            <p>
+                Period:
+                <strong>
+                    @(Model.Period == MembershipPeriod.Monthly ? "Monthly" :
+                      Model.Period == MembershipPeriod.ThreeMonths ? "3 Months" : "Yearly")
+                </strong>
+            </p>
+
+            <form asp-area="Admin" asp-controller="Memberships" asp-action="Delete" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+
+                <button class="btn btn-primary" type="submit">Yes, Delete</button>
+                <a class="btn btn-secondary" asp-area="Admin" asp-controller="Memberships" asp-action="Index">Cancel</a>
+            </form>
+        </div>
+    </div>
+</section>

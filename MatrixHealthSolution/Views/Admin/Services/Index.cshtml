@@ -1,0 +1,47 @@
+@model IEnumerable<MatrixHealthSolution.Models.Service>
+
+@{
+    ViewData["Title"] = "Admin - Services";
+}
+
+<section class="container" style="padding: 3rem 0;">
+    <h2 class="section-title">Admin: Services</h2>
+
+    <p style="margin-bottom: 1.5rem;">
+        <a class="btn btn-primary" asp-action="Create">Add New Service</a>
+    </p>
+
+    @if (Model == null || !Model.Any())
+    {
+        <p>No services found in the database.</p>
+    }
+    else
+    {
+        <table class="table" style="width:100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Price</th>
+                    <th>Active</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var s in Model)
+            {
+                <tr>
+                    <td>@s.Name</td>
+                    <td>@s.Description</td>
+                    <td>$@s.Price</td>
+                    <td>@s.IsActive</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@s.Id">Edit</a> |
+                        <a asp-action="Delete" asp-route-id="@s.Id">Delete</a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</section>

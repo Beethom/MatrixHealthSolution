@@ -1,0 +1,31 @@
+@model MatrixHealthSolution.Models.Product
+@{
+    ViewData["Title"] = "Delete Product";
+}
+
+<section class="device-section">
+    <div class="container">
+        <h2 class="section-title">Delete Product</h2>
+
+        <div class="service-card">
+            <img
+                src="@(string.IsNullOrWhiteSpace(Model.ImagePath) ? "/images/placeholder.png" : Model.ImagePath)"
+                alt="@Model.Name"
+                style="width:100%; height:200px; object-fit:cover; border-radius:12px; margin-bottom:12px;" />
+
+            <h3>@Model.Name</h3>
+            <p>@Model.Description</p>
+            <p><strong>$@Model.Price</strong></p>
+
+            <form asp-area="Admin" asp-controller="Products" asp-action="Delete" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+
+                <p style="margin-top:12px;">Are you sure you want to delete this product?</p>
+
+                <button class="btn btn-primary" type="submit">Yes, Delete</button>
+                <a class="btn btn-secondary" asp-area="Admin" asp-controller="Products" asp-action="Index">Cancel</a>
+            </form>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,53 @@
+@model MatrixHealthSolution.Models.Order
+
+@{
+    ViewData["Title"] = "Order Confirmation";
+}
+
+<section class="services">
+    <div class="container">
+        <h2 class="section-title">Thank you! 🎉</h2>
+
+        <div class="service-card" style="max-width:1000px; margin:0 auto;">
+            <p>Your order has been created.</p>
+
+            <div style="margin-top:10px;">
+                <div><strong>Order #:</strong> @Model.Id</div>
+                <div><strong>Status:</strong> @Model.Status</div>
+                <div><strong>Payment:</strong> @(Model.Payment?.Status ?? "Unpaid")</div>
+            </div>
+
+            <hr style="margin:14px 0;" />
+
+            <h3 style="color:#2E7D32;">Items</h3>
+            <ul>
+                @foreach (var it in Model.Items)
+                {
+                    <li>@it.ProductName — Qty @it.Quantity — $@it.LineTotal.ToString("0.00")</li>
+                }
+            </ul>
+
+            <div style="margin-top:12px; padding:12px; background:#f5f5f5; border-radius:12px;">
+                <div><strong>Subtotal:</strong> $@Model.Subtotal.ToString("0.00")</div>
+                <div><strong>Shipping:</strong> $@Model.ShippingCost.ToString("0.00")</div>
+                <div><strong>Tax:</strong> $@Model.Tax.ToString("0.00")</div>
+                <div style="font-size:1.1rem; margin-top:8px;"><strong>Total:</strong> $@Model.Total.ToString("0.00")</div>
+            </div>
+
+            @if (Model.Payment?.Method == "Mock" && Model.Payment?.Status != "Paid")
+{
+    <form asp-controller="Orders" asp-action="MarkPaid" method="post" style="margin-top:16px;">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Id" />
+        <button class="btn btn-primary" type="submit">Mock: Mark Paid</button>
+    </form>
+}
+
+
+            <div class="hero-buttons" style="margin-top:16px;">
+                <a class="btn btn-secondary" asp-controller="Products" asp-action="Index">Continue Shopping</a>
+                <a class="btn btn-secondary" asp-controller="Home" asp-action="Index">Home</a>
+            </div>
+        </div>
+    </div>
+</section>

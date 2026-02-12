@@ -1,0 +1,24 @@
+@model MatrixHealthSolution.Models.Appointment
+
+@{
+    ViewData["Title"] = "Appointment Confirmed";
+}
+
+<section class="services">
+    <div class="container">
+        <h2 class="section-title">✅ Appointment Confirmed</h2>
+
+        <div class="service-card" style="max-width:650px; margin:auto;">
+            <h3>@Model.Service?.Name</h3>
+            <p><strong>Date:</strong> @Model.ScheduledAt.ToString("MMMM dd, yyyy")</p>
+            <p><strong>Time:</strong> @Model.ScheduledAt.ToString("hh:mm tt")</p>
+
+            <hr />
+
+            <p><strong>Deposit Paid:</strong> @(Model.DepositPaid ? "Yes" : "No")</p>
+            <p><strong>Status:</strong> @Model.Status</p>
+
+            <a class="btn btn-secondary" asp-controller="Home" asp-action="Index">Back to Home</a>
+        </div>
+    </div>
+</section>

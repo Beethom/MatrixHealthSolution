@@ -1,0 +1,78 @@
+@model IEnumerable<MatrixHealthSolution.Models.Product>
+
+@{
+    ViewData["Title"] = "Admin Products";
+}
+
+<section class="services">
+    <div class="container">
+        <h2 class="section-title">Admin Products</h2>
+
+        <a class="btn btn-primary mb-3"
+           asp-area="Admin"
+           asp-controller="Products"
+           asp-action="Create">
+            + Add Product
+        </a>
+
+        <div class="services-grid">
+            @foreach (var p in Model)
+            {
+                <div class="service-card">
+
+                    <!-- ✅ IMAGE (FULLY VISIBLE, NO CROP) -->
+                    <img
+                        src="@(string.IsNullOrWhiteSpace(p.ImagePath)
+                                ? Url.Content("~/images/placeholder.png")
+                                : Url.Content(p.ImagePath))"
+                        alt="@p.Name"
+                        style="
+                            width: 100%;
+                            height: 180px;
+                            object-fit: contain;
+                            background: #f5f5f5;
+                            padding: 10px;
+                            border-radius: 12px;
+                            margin-bottom: 12px;
+                        " />
+
+                    <h3>@p.Name</h3>
+
+                    <p>@p.Description</p>
+
+                    <p>
+                        <strong>$@p.Price</strong>
+                    </p>
+
+                    <p>
+                        Stock:
+                        <strong>@p.Stock</strong>
+                    </p>
+
+                    <p>
+                        Active:
+                        <strong>@p.IsActive</strong>
+                    </p>
+
+                    <div class="hero-buttons" style="margin-top:12px;">
+                        <a class="btn btn-secondary"
+                           asp-area="Admin"
+                           asp-controller="Products"
+                           asp-action="Edit"
+                           asp-route-id="@p.Id">
+                            Edit
+                        </a>
+
+                        <a class="btn btn-secondary"
+                           asp-area="Admin"
+                           asp-controller="Products"
+                           asp-action="Delete"
+                           asp-route-id="@p.Id">
+                            Delete
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>

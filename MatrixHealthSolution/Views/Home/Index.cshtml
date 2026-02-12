@@ -1,0 +1,12 @@
+﻿@model MatrixHealthSolution.Models.ViewModels.HomeViewModel
+
+
+@{
+    ViewData["Title"] = "Home";
+}
+
+<!-- Hero section (your existing hero partial or HTML) -->
+<partial name="_Hero" />
+
+
+@await Html.PartialAsync("_Services", Model.Services)

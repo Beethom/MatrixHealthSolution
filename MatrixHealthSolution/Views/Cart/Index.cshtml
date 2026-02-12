@@ -1,0 +1,102 @@
+@model MatrixHealthSolution.Models.CartVM
+
+@{
+    ViewData["Title"] = "Your Cart";
+    decimal subtotal = (Model?.Items ?? new List<MatrixHealthSolution.Models.CartItem>())
+        .Sum(x => x.Price * x.Quantity);
+}
+
+<section class="services">
+    <div class="container">
+        <h2 class="section-title">Cart</h2>
+
+        @if (TempData["Error"] != null)
+        {
+            <div style="background:#ffebee; border:1px solid #ef9a9a; padding:12px; border-radius:10px; margin-bottom:16px;">
+                @TempData["Error"]
+            </div>
+        }
+
+        @if (Model?.Items == null || !Model.Items.Any())
+        {
+            <div class="service-card" style="max-width:900px; margin:0 auto;">
+                <p>Your cart is empty.</p>
+                <a class="btn btn-primary" asp-controller="Products" asp-action="Index">Shop Products</a>
+            </div>
+        }
+        else
+        {
+            <div class="service-card" style="max-width:1100px; margin:0 auto; overflow:auto;">
+                <table style="width:100%; border-collapse:collapse;">
+                    <thead>
+                        <tr style="background:#f5f5f5;">
+                            <th style="padding:12px;">Product</th>
+                            <th style="padding:12px;">Price</th>
+                            <th style="padding:12px;">Qty</th>
+                            <th style="padding:12px;">Total</th>
+                            <th style="padding:12px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr style="border-top:1px solid #eee;">
+                                <td style="padding:12px;">
+                                    <div style="display:flex; gap:12px; align-items:center;">
+                                        <img src="@(string.IsNullOrWhiteSpace(item.ImagePath) ? "/images/placeholder.png" : item.ImagePath)"
+                                             style="width:60px; height:60px; object-fit:cover; border-radius:10px;" />
+                                        <div>
+                                            <div style="font-weight:700;">@item.Name</div>
+                                            <div style="color:#777; font-size:0.95rem;">#@item.ProductId</div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td style="padding:12px;">$@item.Price.ToString("0.00")</td>
+
+                                <td style="padding:12px;">
+                                    <form asp-controller="Cart" asp-action="Update" method="post"
+                                          style="display:flex; gap:8px; align-items:center;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="productId" value="@item.ProductId" />
+                                        <input type="number" name="qty" value="@item.Quantity" min="0" style="width:80px;" />
+                                        <button class="btn btn-secondary" type="submit">Update</button>
+                                    </form>
+                                </td>
+
+                                <td style="padding:12px;">
+                                    $@((item.Price * item.Quantity).ToString("0.00"))
+                                </td>
+
+                                <td style="padding:12px;">
+                                    <form asp-controller="Cart" asp-action="Remove" method="post" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="productId" value="@item.ProductId" />
+                                        <button class="btn btn-secondary" type="submit">Remove</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="service-card" style="max-width:1100px; margin:16px auto 0 auto;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                    <div style="font-size:1.1rem;">
+                        Subtotal: <strong>$@subtotal.ToString("0.00")</strong>
+                    </div>
+
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <form asp-controller="Cart" asp-action="Clear" method="post" style="display:inline;">
+                            @Html.AntiForgeryToken()
+                            <button class="btn btn-secondary" type="submit">Clear Cart</button>
+                        </form>
+
+                        <a class="btn btn-primary" asp-controller="Orders" asp-action="Checkout">Checkout</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</section>

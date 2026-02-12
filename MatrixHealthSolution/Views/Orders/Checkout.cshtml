@@ -1,0 +1,143 @@
+@model MatrixHealthSolution.Models.ViewModels.CheckoutVM
+@inject IConfiguration Config
+
+@{
+    ViewData["Title"] = "Checkout";
+}
+
+<section class="services">
+    <div class="container">
+        <h2 class="section-title">Checkout</h2>
+        
+        @if (TempData["Error"] != null)
+        {
+            <div style="padding:12px; background:#ffebee; color:#c62828; border-radius:8px; margin-bottom:16px;">
+                @TempData["Error"]
+            </div>
+        }
+        
+        <form id="checkoutForm" asp-controller="Orders" asp-action="CreateStripeSession" method="post">
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="All" style="color:#b00020; margin-bottom:10px;"></div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                <div class="form-group">
+                    <label asp-for="FirstName"></label>
+                    <input asp-for="FirstName" />
+                    <span asp-validation-for="FirstName" style="color:#b00020;"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="LastName"></label>
+                    <input asp-for="LastName" />
+                    <span asp-validation-for="LastName" style="color:#b00020;"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Email"></label>
+                    <input asp-for="Email" />
+                    <span asp-validation-for="Email" style="color:#b00020;"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Phone"></label>
+                    <input asp-for="Phone" />
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Address1"></label>
+                    <input asp-for="Address1" />
+                    <span asp-validation-for="Address1" style="color:#b00020;"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Address2"></label>
+                    <input asp-for="Address2" />
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="City"></label>
+                    <input asp-for="City" />
+                    <span asp-validation-for="City" style="color:#b00020;"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="State"></label>
+                    <input asp-for="State" />
+                    <span asp-validation-for="State" style="color:#b00020;"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Zip"></label>
+                    <input asp-for="Zip" />
+                    <span asp-validation-for="Zip" style="color:#b00020;"></span>
+                </div>
+            </div>
+
+            <hr style="margin:18px 0;" />
+
+            <h3 style="color:#2E7D32; margin-bottom:10px;">Order Summary</h3>
+
+            <div style="display:grid; gap:10px;">
+                @foreach (var item in Model.Cart)
+                {
+                    <div style="display:flex; justify-content:space-between; gap:12px; border-bottom:1px solid #eee; padding-bottom:10px;">
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <img src="@(string.IsNullOrWhiteSpace(item.ImagePath) ? "/images/placeholder.png" : item.ImagePath)"
+                                 style="width:54px; height:54px; object-fit:cover; border-radius:10px;" />
+                            <div>
+                                <div style="font-weight:700;">@item.Name</div>
+                                <div style="color:#777;">Qty: @item.Quantity</div>
+                            </div>
+                        </div>
+                        <div style="font-weight:700;">$@((item.Price * item.Quantity).ToString("0.00"))</div>
+                    </div>
+                }
+            </div>
+
+            <div style="margin-top:14px; padding:12px; background:#f5f5f5; border-radius:12px;">
+                <div style="display:flex; justify-content:space-between;">
+                    <span>Subtotal</span>
+                    <strong>$@Model.Subtotal.ToString("0.00")</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-top:6px;">
+                    <span>Shipping</span>
+                    <strong>$@Model.ShippingCost.ToString("0.00")</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-top:6px;">
+                    <span>Tax</span>
+                    <strong>$@Model.Tax.ToString("0.00")</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:1.1rem;">
+                    <span>Total</span>
+                    <strong>$@Model.Total.ToString("0.00")</strong>
+                </div>
+            </div>
+
+            <div class="hero-buttons" style="margin-top:18px;">
+                <button id="submitBtn" class="btn btn-primary" type="submit">Place Order</button>
+                <a class="btn btn-secondary" asp-controller="Cart" asp-action="Index">Back to Cart</a>
+            </div>
+            
+            <div id="loadingMsg" style="display:none; margin-top:16px; padding:12px; background:#e3f2fd; color:#1565c0; border-radius:8px; text-align:center;">
+                Processing your order... Please wait.
+            </div>
+        </form>
+    </div>
+</section>
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        // Simple loading indicator
+        document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+            console.log('Form is submitting...');
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('submitBtn').textContent = 'Processing...';
+            document.getElementById('loadingMsg').style.display = 'block';
+        });
+    </script>
+}

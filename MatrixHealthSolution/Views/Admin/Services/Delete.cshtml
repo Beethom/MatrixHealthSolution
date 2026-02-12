@@ -1,0 +1,22 @@
+@model MatrixHealthSolution.Models.Service
+
+@{
+    ViewData["Title"] = "Delete Service";
+}
+
+<section class="container" style="padding:3rem 0;">
+    <h2 class="section-title">Delete Service</h2>
+
+    <p>Are you sure you want to delete <strong>@Model.Name</strong>?</p>
+    <p>@Model.Description</p>
+
+    <form asp-action="Delete" method="post" style="margin-top:1.5rem;">
+        @Html.AntiForgeryToken()
+
+        <!-- Needed so DeleteConfirmed(int id) gets the correct id -->
+        <input type="hidden" asp-for="Id" />
+
+        <button type="submit" class="btn btn-danger">Delete</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </form>
+</section>

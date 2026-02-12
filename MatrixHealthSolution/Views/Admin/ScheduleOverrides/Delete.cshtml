@@ -1,0 +1,47 @@
+@model MatrixHealthSolution.Models.ScheduleOverride
+
+@{
+    ViewData["Title"] = "Delete Override";
+
+    // DateOnly -> formatted string
+    var dateStr = new DateTime(Model.Date.Year, Model.Date.Month, Model.Date.Day).ToString("yyyy-MM-dd");
+
+    // TimeOnly? -> fallback -> formatted string
+    var open = Model.OpenTime ?? new TimeOnly(9, 0);
+    var close = Model.CloseTime ?? new TimeOnly(17, 0);
+
+    var openStr = new DateTime(2000, 1, 1, open.Hour, open.Minute, 0).ToString("HH:mm");
+    var closeStr = new DateTime(2000, 1, 1, close.Hour, close.Minute, 0).ToString("HH:mm");
+
+    var hoursStr = Model.IsClosed ? "—" : $"{openStr} - {closeStr}";
+}
+
+<section class="services">
+    <div class="container">
+        <h2 class="section-title">Delete Override</h2>
+
+        <div class="service-card" style="max-width:900px; margin:0 auto;">
+            <p>Are you sure you want to delete this override?</p>
+
+            <div style="margin-top:12px; color:#555;">
+                <div><strong>Date:</strong> @dateStr</div>
+                <div><strong>Closed:</strong> @(Model.IsClosed ? "Yes" : "No")</div>
+                <div><strong>Hours:</strong> @hoursStr</div>
+                <div><strong>Note:</strong> @(string.IsNullOrWhiteSpace(Model.Note) ? "—" : Model.Note)</div>
+            </div>
+
+            <form asp-area="Admin" asp-controller="ScheduleOverrides" asp-action="Delete" method="post" style="margin-top:18px;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+
+                <div class="hero-buttons">
+                    <button type="submit" class="btn btn-primary">Yes, Delete</button>
+                    <a class="btn btn-secondary"
+                       asp-area="Admin"
+                       asp-controller="ScheduleOverrides"
+                       asp-action="Index">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>

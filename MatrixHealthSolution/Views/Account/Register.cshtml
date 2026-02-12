@@ -1,0 +1,69 @@
+@model MatrixHealthSolution.Models.ViewModels.RegisterViewModel
+
+@{
+    ViewData["Title"] = "Create Account";
+}
+
+<section class="auth-page">
+    <div class="container">
+        <div class="auth-card">
+
+            <h2>Create Your Account</h2>
+            <p class="auth-subtitle">
+                Join Matrix Health Solutions
+            </p>
+
+            <form asp-action="Register" method="post">
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="All" class="text-danger"></div>
+
+                <div class="form-group">
+                    <label asp-for="FirstName"></label>
+                    <input asp-for="FirstName" class="form-control" />
+                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="LastName"></label>
+                    <input asp-for="LastName" class="form-control" />
+                    <span asp-validation-for="LastName" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Email"></label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Password"></label>
+                    <input asp-for="Password" class="form-control" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="ConfirmPassword"></label>
+                    <input asp-for="ConfirmPassword" class="form-control" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">
+                    Create Account
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p>
+                    Already have an account?
+                    <a asp-action="Login">Log in here</a>
+                </p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

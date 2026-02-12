@@ -1,0 +1,197 @@
+@model MatrixHealthSolution.Models.Appointment
+
+@{
+    ViewData["Title"] = $"Appointment #{Model.Id}";
+    var status = Model.Status ?? "Pending";
+
+    string Badge(string s)
+    {
+        s = (s ?? "").ToLower();
+        return s switch
+        {
+            "pending" => "background:#fff8e1; color:#8a6d00; border:1px solid #ffd700;",
+            "confirmed" => "background:#e8f5e8; color:#2e7d32; border:1px solid #81c784;",
+            "cancelled" => "background:#ffebee; color:#b71c1c; border:1px solid #ef9a9a;",
+            "completed" => "background:#e3f2fd; color:#0d47a1; border:1px solid #90caf9;",
+            _ => "background:#f5f5f5; color:#333; border:1px solid #ddd;"
+        };
+    }
+
+    string Money(decimal amt) => amt.ToString("0.00");
+}
+
+<section class="services">
+    <div class="container">
+        <h2 class="section-title">Appointment Details</h2>
+
+        <div class="service-card" style="max-width:1000px; margin:0 auto;">
+
+            <!-- Header row -->
+            <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; margin-bottom:14px;">
+                <div>
+                    <div style="font-size:1.2rem; font-weight:700;">#@Model.Id</div>
+                    <div style="color:#666; margin-top:2px;">
+                        Created: @(Model.CreatedAt == default ? "—" : Model.CreatedAt.ToString("MMM dd, yyyy • h:mm tt"))
+                    </div>
+                </div>
+
+                <div>
+                    <span style="padding:6px 10px; border-radius:999px; font-size:0.9rem; display:inline-block; @Badge(status)">
+                        @status
+                    </span>
+                </div>
+            </div>
+
+            <hr style="border:none; border-top:1px solid #eee; margin:14px 0;" />
+
+            <!-- Main grid -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:18px;">
+                <!-- Left: Appointment -->
+                <div>
+                    <h3 style="color:#2E7D32; margin-bottom:10px;">Appointment</h3>
+
+                    <div style="margin-bottom:10px;">
+                        <div style="color:#777;">Service</div>
+                        <div style="font-weight:700;">
+                            @(Model.Service?.Name ?? $"Service #{Model.ServiceId}")
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:10px;">
+                        <div style="color:#777;">Date + Time</div>
+                        @if (Model.ScheduledAt != default)
+                        {
+                            <div style="font-weight:700;">@Model.ScheduledAt.ToString("MMM dd, yyyy")</div>
+                            <div style="color:#666;">@Model.ScheduledAt.ToString("h:mm tt")</div>
+                        }
+                        else
+                        {
+                            <div style="color:#999;">(missing)</div>
+                        }
+                    </div>
+
+                    <div style="margin-bottom:10px;">
+                        <div style="color:#777;">Notes</div>
+                        <div style="background:#fafafa; border:1px solid #eee; padding:12px; border-radius:12px;">
+                            @if (!string.IsNullOrWhiteSpace(Model.Notes))
+                            {
+                                @Model.Notes
+                            }
+                            else
+                            {
+                                <span style="color:#999;">No notes</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Patient + Deposit -->
+                <div>
+                    <h3 style="color:#2E7D32; margin-bottom:10px;">Patient</h3>
+
+                    <div style="margin-bottom:10px;">
+                        <div style="color:#777;">Name</div>
+                        <div style="font-weight:700;">
+                            @($"{Model.FirstName} {Model.LastName}".Trim())
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:10px;">
+                        <div style="color:#777;">Email</div>
+                        <div style="font-weight:600;">@Model.Email</div>
+                    </div>
+
+                    <div style="margin-bottom:10px;">
+                        <div style="color:#777;">Phone</div>
+                        <div style="font-weight:600;">@Model.Phone</div>
+                    </div>
+
+                    <h3 style="color:#2E7D32; margin:16px 0 10px 0;">Deposit</h3>
+
+                    <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap;">
+                        <div style="background:#f5f5f5; padding:10px 12px; border-radius:12px;">
+                            <div style="color:#777;">Amount</div>
+                            <div style="font-weight:800;">$@Money(Model.DepositAmount)</div>
+                        </div>
+
+                        <div style="background:#f5f5f5; padding:10px 12px; border-radius:12px;">
+                            <div style="color:#777;">State</div>
+                            @if (Model.DepositPaid)
+                            {
+                                <div style="font-weight:800; color:#2E7D32;">Paid</div>
+                            }
+                            else
+                            {
+                                <div style="font-weight:800; color:#b00020;">Not Paid</div>
+                            }
+                        </div>
+                    </div>
+
+                    <div style="margin-top:14px;">
+                        @if (!Model.DepositPaid)
+                        {
+                            <form asp-area="Admin"
+                                  asp-controller="Appointments"
+                                  asp-action="MarkDepositPaid"
+                                  method="post"
+                                  style="display:inline;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <button type="submit" class="btn btn-primary">Mark Deposit Paid</button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <hr style="border:none; border-top:1px solid #eee; margin:18px 0;" />
+
+            <!-- Actions -->
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <a class="btn btn-secondary"
+                   asp-area="Admin"
+                   asp-controller="Appointments"
+                   asp-action="Index">
+                    Back
+                </a>
+
+                <a class="btn btn-secondary"
+                   asp-area="Admin"
+                   asp-controller="Appointments"
+                   asp-action="Reschedule"
+                   asp-route-id="@Model.Id">
+                    Reschedule
+                </a>
+
+                @if (status != "Cancelled")
+                {
+                    <form asp-area="Admin"
+                          asp-controller="Appointments"
+                          asp-action="Cancel"
+                          method="post"
+                          style="display:inline;"
+                          onsubmit="return confirm('Cancel this appointment?');">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button type="submit" class="btn btn-secondary">Cancel</button>
+                    </form>
+                }
+
+                @if (status != "Completed" && status != "Cancelled")
+                {
+                    <form asp-area="Admin"
+                          asp-controller="Appointments"
+                          asp-action="MarkCompleted"
+                          method="post"
+                          style="display:inline;"
+                          onsubmit="return confirm('Mark as completed?');">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button type="submit" class="btn btn-secondary">Mark Completed</button>
+                    </form>
+                }
+            </div>
+
+        </div>
+    </div>
+</section>

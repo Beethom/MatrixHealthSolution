@@ -1,0 +1,42 @@
+@model IEnumerable<MatrixHealthSolution.Models.Membership>
+@using MatrixHealthSolution.Models.Enums
+
+@{
+    ViewData["Title"] = "Admin Memberships";
+}
+
+<section class="services">
+    <div class="container">
+        <h2 class="section-title">Admin Memberships</h2>
+
+        <a class="btn btn-primary mb-3" asp-area="Admin" asp-controller="Memberships" asp-action="Create">
+            + Add Membership
+        </a>
+
+        <div class="services-grid">
+            @foreach (var m in Model)
+            {
+                <div class="service-card">
+                    <h3>@m.Name</h3>
+                    <p>@m.Description</p>
+                    <p><strong>$@m.Price</strong></p>
+
+                    <p>
+                        Period:
+                        <strong>
+                            @(m.Period == MembershipPeriod.Monthly ? "Monthly" :
+                              m.Period == MembershipPeriod.ThreeMonths ? "3 Months" : "Yearly")
+                        </strong>
+                    </p>
+
+                    <p>Active: <strong>@m.IsActive</strong></p>
+
+                    <div class="hero-buttons" style="margin-top:12px;">
+                        <a class="btn btn-secondary" asp-area="Admin" asp-controller="Memberships" asp-action="Edit" asp-route-id="@m.Id">Edit</a>
+                        <a class="btn btn-secondary" asp-area="Admin" asp-controller="Memberships" asp-action="Delete" asp-route-id="@m.Id">Delete</a>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>

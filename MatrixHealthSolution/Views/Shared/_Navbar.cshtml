@@ -1,0 +1,72 @@
+@using Microsoft.AspNetCore.Identity
+@using MatrixHealthSolution.Models.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    // Get current user (for FirstName / LastName display)
+    var appUser = await UserManager.GetUserAsync(User);
+    var displayName =
+        !string.IsNullOrWhiteSpace(appUser?.FirstName)
+            ? appUser!.FirstName
+            : (appUser?.UserName ?? "Account");
+}
+
+
+<header>
+    <nav class="container">
+        <div class="logo">🌿 Matrix Health Solutions</div>
+
+        <ul class="nav-links">
+            <!-- Public links (CLEAR area) -->
+            <li><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
+            <li><a asp-area="" asp-controller="Services" asp-action="Index">Services</a></li>
+             <li><a asp-area="" asp-controller="Appointments" asp-action="Book">Book Appointment</a></li>
+             <li><a asp-controller="Contact" asp-action="Index">Contact</a></li>
+          <!--  <li><a asp-area="" asp-controller="Products" asp-action="Index">Products</a></li>
+            <li><a asp-area="" asp-controller="Home" asp-action="Contact">Contact</a></li>
+           
+           
+
+
+            <li><a asp-area="" asp-controller="Cart" asp-action="Index">Cart</a></li>-->
+
+
+
+
+
+            <!-- Admin links (SET area) -->
+            @if (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+            {
+                <li><a asp-area="Admin" asp-controller="Services" asp-action="Index">Admin Services</a></li>
+                 <li><a asp-area="Admin" asp-controller="Appointments" asp-action="Index">Admin Appointments</a></li>
+                <li><a asp-area="Admin" asp-controller="ScheduleOverrides" asp-action="Index">Schedule Overrides</a></li>
+               <!-- <li><a asp-area="Admin" asp-controller="Products" asp-action="Index">Admin Products</a></li>
+
+                <li><a asp-area="Admin" asp-controller="Memberships" asp-action="Index">Admin Memberships</a></li>
+               
+                <li><a asp-area="Admin" asp-controller="Orders" asp-action="Index">Admin Orders</a></li>-->
+
+
+
+
+            }
+        </ul>
+
+        <div class="auth-buttons">
+            @if (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+            {
+                <span class="btn btn-secondary">Hi, @User.Identity.Name</span>
+                <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" style="display:inline;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-primary">Logout</button>
+                </form>
+            }
+            else
+            {
+                <a asp-area="" asp-controller="Account" asp-action="Login" class="btn btn-secondary">Log In</a>
+                <a asp-area="" asp-controller="Account" asp-action="Register" class="btn btn-primary">Sign Up</a>
+            }
+        </div>
+    </nav>
+</header>

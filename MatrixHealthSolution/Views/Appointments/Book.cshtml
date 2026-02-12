@@ -1,0 +1,177 @@
+@model MatrixHealthSolution.Models.ViewModels.BookAppointmentVM
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Book Appointment";
+}
+
+<section class="services">
+    <div class="container">
+        <h2 class="section-title">Book an Appointment</h2>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div style="background:#fff8e1; border:1px solid #ffd700; padding:12px; border-radius:10px; margin-bottom:16px;">
+                <strong>Please fix the errors below.</strong>
+                <div asp-validation-summary="All"></div>
+            </div>
+        }
+
+        <form asp-action="Book" method="post" class="service-card" style="max-width:900px; margin:0 auto;">
+            @Html.AntiForgeryToken()
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                <div class="form-group">
+                    <label asp-for="FirstName"></label>
+                    <input asp-for="FirstName" />
+                    <span asp-validation-for="FirstName" style="color:#b00020;"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="LastName"></label>
+                    <input asp-for="LastName" />
+                    <span asp-validation-for="LastName" style="color:#b00020;"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Email"></label>
+                    <input asp-for="Email" />
+                    <span asp-validation-for="Email" style="color:#b00020;"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Phone"></label>
+                    <input asp-for="Phone" />
+                    <span asp-validation-for="Phone" style="color:#b00020;"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="ServiceId"></label>
+                    <select asp-for="ServiceId" asp-items="Model.Services">
+                        <option value="">-- Select a service --</option>
+                    </select>
+                    <span asp-validation-for="ServiceId" style="color:#b00020;"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Date"></label>
+                    <input asp-for="Date" type="date" />
+                    <span asp-validation-for="Date" style="color:#b00020;"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="StartTime"></label>
+                    <select asp-for="StartTime">
+                        <option value="">-- Select a time --</option>
+                        @foreach (var t in Model.AvailableTimes)
+                        {
+                            <option value="@t">@DateTime.Today.Add(t).ToString("h:mm tt", CultureInfo.InvariantCulture)</option>
+                        }
+                    </select>
+                    <span asp-validation-for="StartTime" style="color:#b00020;"></span>
+                </div>
+
+                <div class="form-group" style="display:flex; align-items:center; gap:10px; margin-top:30px;">
+                    <input asp-for="IsNewPatient" type="checkbox" style="width:auto;" />
+                    <label asp-for="IsNewPatient" style="margin:0;"></label>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top:16px;">
+                <label asp-for="Notes"></label>
+                <textarea asp-for="Notes" rows="4" placeholder="Tell us anything important (symptoms, preferences, allergies, etc.)"></textarea>
+                <span asp-validation-for="Notes" style="color:#b00020;"></span>
+            </div>
+
+            <div style="margin-top:16px; padding:12px; border-radius:12px; background:#f5f5f5;">
+                <strong>Deposit required today:</strong>
+                $@Model.DepositAmount
+                <div style="font-size:0.95rem; color:#666; margin-top:6px;">
+                    This deposit holds your slot and goes toward your service total.
+                </div>
+            </div>
+
+            <div class="hero-buttons" style="margin-top:18px;">
+                <button type="submit" class="btn btn-primary">Continue to Deposit</button>
+                <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</section>
+
+<script>
+    (function () {
+        const dateInput = document.getElementById("Date");
+        const serviceSelect = document.getElementById("ServiceId");
+        const timeSelect = document.getElementById("StartTime");
+
+        if (!dateInput || !serviceSelect || !timeSelect) return;
+
+        async function refreshTimes() {
+            const date = dateInput.value;          // yyyy-mm-dd
+            const serviceId = serviceSelect.value; // "3"
+
+            // If no date or no service, reset times dropdown only (do NOT clear other fields)
+            if (!date || !serviceId) {
+                const prev = timeSelect.value;
+                timeSelect.innerHTML = `<option value="">-- Select a time --</option>`;
+                if (prev && [...timeSelect.options].some(o => o.value === prev)) {
+                    timeSelect.value = prev;
+                }
+                return;
+            }
+
+            // Keep user's selected time (if any)
+            const previous = timeSelect.value;
+
+            const url = `/Appointments/AvailableTimes?date=${encodeURIComponent(date)}&serviceId=${encodeURIComponent(serviceId)}`;
+            const res = await fetch(url);
+            if (!res.ok) return;
+
+            const times = await res.json(); // ["09:00", "10:00", ...]
+
+            // Reset dropdown
+            timeSelect.innerHTML = `<option value="">-- Select a time --</option>`;
+
+            // Add new options
+            times.forEach(t => {
+                // Controller returns "HH:mm" - model binder expects TimeSpan like "HH:mm:ss"
+                const value = t + ":00";
+
+                const opt = document.createElement("option");
+                opt.value = value;
+
+                // Display nicer (optional): "09:00" -> "9:00 AM"
+                const [hh, mm] = t.split(":").map(Number);
+                const d = new Date();
+                d.setHours(hh, mm, 0, 0);
+                opt.textContent = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+                timeSelect.appendChild(opt);
+            });
+
+            // Re-select previous if still available
+            if (previous && [...timeSelect.options].some(o => o.value === previous)) {
+                timeSelect.value = previous;
+            }
+        }
+
+        // ✅ Refresh when Date changes + close calendar pop-up
+        dateInput.addEventListener("change", () => {
+            dateInput.blur();  // ✅ closes the calendar after date selection
+            refreshTimes();
+        });
+
+        // Refresh when Service changes
+        serviceSelect.addEventListener("change", () => {
+            // When service changes, clear selected time (optional but recommended)
+            timeSelect.value = "";
+            refreshTimes();
+        });
+
+        // Optional: if page loads with date+service selected, load times immediately
+        if (dateInput.value && serviceSelect.value) {
+            refreshTimes();
+        }
+    })();
+</script>
