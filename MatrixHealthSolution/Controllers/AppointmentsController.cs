@@ -116,7 +116,7 @@ public class AppointmentsController : Controller
         {
             await _context.SaveChangesAsync();
         }
-        catch
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException)
         {
             ModelState.AddModelError("", "That slot was just booked. Please choose another time.");
             vm.AvailableTimes = await _slots.GetAvailableSlotsAsync(vm.Date.Date, service.DurationMinutes);

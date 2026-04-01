@@ -12,8 +12,8 @@ public static class DbSeeder
         UserManager<ApplicationUser> userManager,
         RoleManager<IdentityRole> roleManager)
     {
-        // Ensure database is created
-        await context.Database.EnsureCreatedAsync();
+        // Apply pending migrations (creates DB if it doesn't exist)
+        await context.Database.MigrateAsync();
 
         // Skip seeding entirely if already done
         bool rolesExist = await roleManager.RoleExistsAsync("Admin");
