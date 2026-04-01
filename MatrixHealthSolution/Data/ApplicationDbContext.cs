@@ -29,20 +29,20 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         base.OnModelCreating(builder);
 
-        // ✅ Appointment -> Service relationship
+        // Appointment -> Service relationship
         builder.Entity<Appointment>()
             .HasOne(a => a.Service)
             .WithMany(s => s.Appointments)
             .HasForeignKey(a => a.ServiceId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // ⚠️ NOTE: This makes every ScheduledAt unique (only one appointment per exact datetime)
+        // Prevent double-booking the same service at the same time
         builder.Entity<Appointment>()
-            .HasIndex(a => a.ScheduledAt)
+            .HasIndex(a => new { a.ServiceId, a.ScheduledAt })
             .IsUnique();
 
         // ============================================================
-        // ✅ SQLite support for DateOnly/TimeOnly (ScheduleOverride)
+        // SQLite support for DateOnly/TimeOnly (ScheduleOverride)
         // ============================================================
 
         var dateOnlyConverter = new ValueConverter<DateOnly, string>(
@@ -65,18 +65,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 v => v.HasValue ? v.Value.ToString("HH:mm:ss") : null,
                 v => string.IsNullOrWhiteSpace(v) ? null : TimeOnly.Parse(v));
 
-                // Appointment stuff you already have...
-    builder.Entity<Appointment>()
-        .HasOne(a => a.Service)
-        .WithMany(s => s.Appointments)
-        .HasForeignKey(a => a.ServiceId)
-        .OnDelete(DeleteBehavior.Restrict);
-
-    builder.Entity<Appointment>()
-        .HasIndex(a => a.ScheduledAt)
-        .IsUnique();
-
-    // ✅ Orders
+        // Orders
     builder.Entity<Order>()
         .HasMany(o => o.Items)
         .WithOne(i => i.Order)

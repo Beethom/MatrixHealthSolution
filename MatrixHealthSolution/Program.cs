@@ -9,25 +9,24 @@ using Stripe;
 var builder = WebApplication.CreateBuilder(args);
 
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
+//builder.Services.AddDbContext<ApplicationDbContext>(options =>
+//    options.UseSqlServer(
+//        builder.Configuration.GetConnectionString("DefaultConnection"),
+//        sql =>
+//        {
+//            sql.EnableRetryOnFailure(
+//                maxRetryCount: 5,
+//                maxRetryDelay: TimeSpan.FromSeconds(10),
+//                errorNumbersToAdd: null
+//            );
+//
+//            sql.CommandTimeout(60); // optional (seconds)
+//        }
+//    )
+//);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        sql =>
-        {
-            sql.EnableRetryOnFailure(
-                maxRetryCount: 5,
-                maxRetryDelay: TimeSpan.FromSeconds(10),
-                errorNumbersToAdd: null
-            );
-
-            sql.CommandTimeout(60); // optional (seconds)
-        }
-    )
-);
-//builder.Services.AddDbContext<ApplicationDbContext>(options =>
-   // options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-//builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    //options.UseSqlite("Data Source=matrixhealthsolution.db"));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? "Data Source=matrixhealthsolution.db"));
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -66,6 +65,12 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine($"Error seeding database: {ex.Message}");
     }
 }
+
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
+if (string.IsNullOrEmpty(app.Configuration["Stripe:SecretKey"]))
+    logger.LogWarning("Stripe:SecretKey is not configured. Payments will not work.");
+if (string.IsNullOrEmpty(app.Configuration["Stripe:WebhookSecret"]))
+    logger.LogWarning("Stripe:WebhookSecret is not configured. Webhook verification will fail.");
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

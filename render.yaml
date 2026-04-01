@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: matrix-health-solution
+    runtime: docker
+    dockerfilePath: ./MatrixHealthSolution/Dockerfile
+    dockerContext: ./MatrixHealthSolution
+    port: 8080
+    disk:
+      name: sqlite-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: Stripe__PublishableKey
+        sync: false
+      - key: Stripe__SecretKey
+        sync: false
+      - key: Stripe__WebhookSecret
+        sync: false
+      - key: Email__SmtpHost
+        value: smtp.gmail.com
+      - key: Email__SmtpPort
+        value: "587"
+      - key: Email__Username
+        sync: false
+      - key: Email__Password
+        sync: false
+      - key: Email__From
+        sync: false
+      - key: Email__Admin
+        sync: false

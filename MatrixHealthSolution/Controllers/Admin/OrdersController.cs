@@ -1,12 +1,14 @@
 using MatrixHealthSolution.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using MatrixHealthSolution.Models; 
+using MatrixHealthSolution.Models;
 
 namespace MatrixHealthSolution.Controllers.Admin;
 
 [Area("Admin")]
 [Route("Admin/[controller]/[action]")]
+[Authorize(Roles = "Admin")]
 public class OrdersController : Controller
 {
     private readonly ApplicationDbContext _context;

@@ -1,3 +1,4 @@
+using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Mvc;
 using MatrixHealthSolution.Models.ViewModels;
 using MatrixHealthSolution.Services;
@@ -30,13 +31,14 @@ public class ContactController : Controller
 
         var adminEmail = _config["Email:Admin"];
 
+        var enc = HtmlEncoder.Default;
         var html = $@"
             <h2>New Contact Message</h2>
-            <p><strong>Name:</strong> {vm.Name}</p>
-            <p><strong>Email:</strong> {vm.Email}</p>
-            <p><strong>Subject:</strong> {vm.Subject}</p>
+            <p><strong>Name:</strong> {enc.Encode(vm.Name)}</p>
+            <p><strong>Email:</strong> {enc.Encode(vm.Email)}</p>
+            <p><strong>Subject:</strong> {enc.Encode(vm.Subject)}</p>
             <hr />
-            <p>{vm.Message.Replace("\n", "<br/>")}</p>
+            <p>{enc.Encode(vm.Message).Replace("&#xA;", "<br/>")}</p>
         ";
 
         await _email.SendAsync(

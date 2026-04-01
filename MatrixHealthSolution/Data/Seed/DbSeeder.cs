@@ -15,6 +15,12 @@ public static class DbSeeder
         // Ensure database is created
         await context.Database.EnsureCreatedAsync();
 
+        // Skip seeding entirely if already done
+        bool rolesExist = await roleManager.RoleExistsAsync("Admin");
+        bool dataExists = await context.Services.AnyAsync();
+        if (rolesExist && dataExists)
+            return;
+
         // --- Roles ---
         string[] roles = new[] { "Admin", "Employee", "User" };
         foreach (var role in roles)

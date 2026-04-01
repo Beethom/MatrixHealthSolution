@@ -1,12 +1,14 @@
 using MatrixHealthSolution.Data;
 using MatrixHealthSolution.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace MatrixHealthSolution.Controllers.Admin
 {
     [Area("Admin")]
-    //[Route("Admin/[controller]/[action]")]
+    [Route("Admin/[controller]/[action]")]
+    [Authorize(Roles = "Admin")]
     public class ServicesController : Controller
     {
         private readonly ApplicationDbContext _context;
