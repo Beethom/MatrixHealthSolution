@@ -116,9 +116,17 @@ public class AppointmentsController : Controller
         {
             await _context.SaveChangesAsync();
         }
-        catch (Microsoft.EntityFrameworkCore.DbUpdateException)
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
         {
-            ModelState.AddModelError("", "That slot was just booked. Please choose another time.");
+            var detail = ex.InnerException?.Message ?? ex.Message;
+            if (detail.Contains("UNIQUE"))
+            {
+                ModelState.AddModelError("", "That slot was just booked. Please choose another time.");
+            }
+            else
+            {
+                ModelState.AddModelError("", $"Booking error: {detail}");
+            }
             vm.AvailableTimes = await _slots.GetAvailableSlotsAsync(vm.Date.Date, service.DurationMinutes);
             return View(vm);
         }
