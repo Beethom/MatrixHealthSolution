@@ -1,0 +1,15 @@
+@model MatrixHealthSolution.Models.GiftCard
+@{ ViewData["Title"] = "Gift Card Details"; }
+<section class="services"><div class="container">
+  <h2 class="section-title">Gift Card Details</h2>
+  <div class="service-card">
+    <p><strong>Code:</strong> @Model.Code</p>
+    <p><strong>Value:</strong> $@Model.Value.ToString("0.00")</p>
+    <p><strong>Expires:</strong> @(Model.ExpiryDate.HasValue ? Model.ExpiryDate.Value.ToString("MM/dd/yyyy") : "No expiry")</p>
+    <p><strong>Active:</strong> @(Model.IsActive ? "Yes" : "No")</p>
+    <div class="hero-buttons" style="margin-top:12px;">
+      <a class="btn btn-secondary" asp-area="Admin" asp-controller="GiftCards" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+      <a class="btn btn-secondary" asp-area="Admin" asp-controller="GiftCards" asp-action="Index">Back to List</a>
+    </div>
+  </div>
+</div></section>

@@ -1,0 +1,18 @@
+@model MatrixHealthSolution.Models.GiftCard
+@{ ViewData["Title"] = "Delete Gift Card"; }
+<section class="services"><div class="container">
+  <h2 class="section-title">Delete Gift Card</h2>
+  <div class="service-card">
+    <p><strong>Code:</strong> @Model.Code</p>
+    <p><strong>Value:</strong> $@Model.Value.ToString("0.00")</p>
+    @if (Model.ExpiryDate.HasValue) { <p><strong>Expires:</strong> @Model.ExpiryDate.Value.ToString("MM/dd/yyyy")</p> }
+    <p><strong>Active:</strong> @(Model.IsActive ? "Yes" : "No")</p>
+    <p class="text-danger">Are you sure you want to delete this gift card?</p>
+    <form asp-area="Admin" asp-controller="GiftCards" asp-action="Delete" method="post">
+      @Html.AntiForgeryToken()
+      <input type="hidden" asp-for="Id" />
+      <button class="btn btn-primary" type="submit">Yes, Delete</button>
+      <a class="btn btn-secondary" asp-area="Admin" asp-controller="GiftCards" asp-action="Index">Cancel</a>
+    </form>
+  </div>
+</div></section>

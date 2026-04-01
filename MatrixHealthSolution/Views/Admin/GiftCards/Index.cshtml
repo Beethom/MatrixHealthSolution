@@ -1,0 +1,39 @@
+@model IEnumerable<MatrixHealthSolution.Models.GiftCard>
+@{ ViewData["Title"] = "Gift Cards"; }
+<section class="services">
+  <div class="container">
+    <h2 class="section-title">Gift Cards</h2>
+    <a class="btn btn-primary mb-3" asp-area="Admin" asp-controller="GiftCards" asp-action="Create">+ Add Gift Card</a>
+    @if (!Model.Any())
+    {
+      <p>No gift cards found.</p>
+    }
+    else
+    {
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr>
+          <th style="text-align:left;padding:8px;border-bottom:1px solid #ddd;">Code</th>
+          <th style="text-align:left;padding:8px;border-bottom:1px solid #ddd;">Value</th>
+          <th style="text-align:left;padding:8px;border-bottom:1px solid #ddd;">Expires</th>
+          <th style="text-align:left;padding:8px;border-bottom:1px solid #ddd;">Active</th>
+          <th style="padding:8px;border-bottom:1px solid #ddd;"></th>
+        </tr></thead>
+        <tbody>
+          @foreach (var g in Model)
+          {
+            <tr>
+              <td style="padding:8px;border-bottom:1px solid #eee;">@g.Code</td>
+              <td style="padding:8px;border-bottom:1px solid #eee;">$@g.Value.ToString("0.00")</td>
+              <td style="padding:8px;border-bottom:1px solid #eee;">@(g.ExpiryDate.HasValue ? g.ExpiryDate.Value.ToString("MM/dd/yyyy") : "—")</td>
+              <td style="padding:8px;border-bottom:1px solid #eee;">@(g.IsActive ? "Yes" : "No")</td>
+              <td style="padding:8px;border-bottom:1px solid #eee;">
+                <a class="btn btn-secondary" asp-area="Admin" asp-controller="GiftCards" asp-action="Edit" asp-route-id="@g.Id">Edit</a>
+                <a class="btn btn-secondary" asp-area="Admin" asp-controller="GiftCards" asp-action="Delete" asp-route-id="@g.Id">Delete</a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</section>

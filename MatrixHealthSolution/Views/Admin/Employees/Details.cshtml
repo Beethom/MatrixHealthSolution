@@ -1,0 +1,15 @@
+@model MatrixHealthSolution.Models.Employee
+@{ ViewData["Title"] = "Employee Details"; }
+<section class="services"><div class="container">
+  <h2 class="section-title">Employee Details</h2>
+  <div class="service-card">
+    <p><strong>Name:</strong> @Model.FullName</p>
+    <p><strong>Email:</strong> @Model.Email</p>
+    <p><strong>Position:</strong> @Model.Position</p>
+    <p><strong>Active:</strong> @(Model.IsActive ? "Yes" : "No")</p>
+    <div class="hero-buttons" style="margin-top:12px;">
+      <a class="btn btn-secondary" asp-area="Admin" asp-controller="Employees" asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+      <a class="btn btn-secondary" asp-area="Admin" asp-controller="Employees" asp-action="Index">Back to List</a>
+    </div>
+  </div>
+</div></section>

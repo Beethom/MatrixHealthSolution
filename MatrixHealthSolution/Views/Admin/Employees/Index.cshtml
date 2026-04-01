@@ -1,0 +1,37 @@
+@model IEnumerable<MatrixHealthSolution.Models.Employee>
+@{ ViewData["Title"] = "Employees"; }
+<section class="services"><div class="container">
+  <h2 class="section-title">Employees</h2>
+  <a class="btn btn-primary mb-3" asp-area="Admin" asp-controller="Employees" asp-action="Create">+ Add Employee</a>
+  @if (!Model.Any())
+  {
+    <p>No employees found.</p>
+  }
+  else
+  {
+    <table style="width:100%;border-collapse:collapse;">
+      <thead><tr>
+        <th style="text-align:left;padding:8px;border-bottom:1px solid #ddd;">Name</th>
+        <th style="text-align:left;padding:8px;border-bottom:1px solid #ddd;">Email</th>
+        <th style="text-align:left;padding:8px;border-bottom:1px solid #ddd;">Position</th>
+        <th style="text-align:left;padding:8px;border-bottom:1px solid #ddd;">Active</th>
+        <th style="padding:8px;border-bottom:1px solid #ddd;"></th>
+      </tr></thead>
+      <tbody>
+        @foreach (var e in Model)
+        {
+          <tr>
+            <td style="padding:8px;border-bottom:1px solid #eee;">@e.FullName</td>
+            <td style="padding:8px;border-bottom:1px solid #eee;">@e.Email</td>
+            <td style="padding:8px;border-bottom:1px solid #eee;">@e.Position</td>
+            <td style="padding:8px;border-bottom:1px solid #eee;">@(e.IsActive ? "Yes" : "No")</td>
+            <td style="padding:8px;border-bottom:1px solid #eee;">
+              <a class="btn btn-secondary" asp-area="Admin" asp-controller="Employees" asp-action="Edit" asp-route-id="@e.Id">Edit</a>
+              <a class="btn btn-secondary" asp-area="Admin" asp-controller="Employees" asp-action="Delete" asp-route-id="@e.Id">Delete</a>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div></section>

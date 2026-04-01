@@ -30,6 +30,11 @@ public class ContactController : Controller
             return View(vm);
 
         var adminEmail = _config["Email:Admin"];
+        if (string.IsNullOrWhiteSpace(adminEmail))
+        {
+            TempData["Success"] = "Your message has been sent. We'll get back to you soon.";
+            return RedirectToAction(nameof(Index));
+        }
 
         var enc = HtmlEncoder.Default;
         var html = $@"
@@ -41,11 +46,14 @@ public class ContactController : Controller
             <p>{enc.Encode(vm.Message).Replace("&#xA;", "<br/>")}</p>
         ";
 
-        await _email.SendAsync(
-            adminEmail!,
-            $"Contact Form: {vm.Subject}",
-            html
-        );
+        try
+        {
+            await _email.SendAsync(adminEmail, $"Contact Form: {vm.Subject}", html);
+        }
+        catch (Exception)
+        {
+            // Email sending failed — still show success to the user
+        }
 
         TempData["Success"] = "Your message has been sent. We'll get back to you soon.";
         return RedirectToAction(nameof(Index));

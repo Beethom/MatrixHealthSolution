@@ -14,20 +14,30 @@ public class EmailService
 
     public async Task SendAsync(string to, string subject, string body)
     {
+        var host = _config["Email:SmtpHost"];
+        var portStr = _config["Email:SmtpPort"];
+        var username = _config["Email:Username"];
+        var password = _config["Email:Password"];
+        var from = _config["Email:From"];
+
+        if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(portStr) ||
+            string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password) ||
+            string.IsNullOrWhiteSpace(from))
+        {
+            throw new InvalidOperationException("Email is not configured.");
+        }
+
         var smtp = new SmtpClient
         {
-            Host = _config["Email:SmtpHost"],
-            Port = int.Parse(_config["Email:SmtpPort"]!),
+            Host = host,
+            Port = int.Parse(portStr),
             EnableSsl = true,
-            Credentials = new NetworkCredential(
-                _config["Email:Username"],
-                _config["Email:Password"]
-            )
+            Credentials = new NetworkCredential(username, password)
         };
 
         var mail = new MailMessage
         {
-            From = new MailAddress(_config["Email:From"]!),
+            From = new MailAddress(from),
             Subject = subject,
             Body = body,
             IsBodyHtml = true

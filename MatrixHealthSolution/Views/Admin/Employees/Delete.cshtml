@@ -1,0 +1,17 @@
+@model MatrixHealthSolution.Models.Employee
+@{ ViewData["Title"] = "Delete Employee"; }
+<section class="services"><div class="container">
+  <h2 class="section-title">Delete Employee</h2>
+  <div class="service-card">
+    <p><strong>Name:</strong> @Model.FullName</p>
+    <p><strong>Email:</strong> @Model.Email</p>
+    <p><strong>Position:</strong> @Model.Position</p>
+    <p class="text-danger">Are you sure you want to delete this employee?</p>
+    <form asp-area="Admin" asp-controller="Employees" asp-action="Delete" method="post">
+      @Html.AntiForgeryToken()
+      <input type="hidden" asp-for="Id" />
+      <button class="btn btn-primary" type="submit">Yes, Delete</button>
+      <a class="btn btn-secondary" asp-area="Admin" asp-controller="Employees" asp-action="Index">Cancel</a>
+    </form>
+  </div>
+</div></section>
