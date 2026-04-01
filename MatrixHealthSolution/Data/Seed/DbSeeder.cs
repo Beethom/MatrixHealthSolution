@@ -12,8 +12,9 @@ public static class DbSeeder
         UserManager<ApplicationUser> userManager,
         RoleManager<IdentityRole> roleManager)
     {
-        // Apply pending migrations (creates DB if it doesn't exist)
-        await context.Database.MigrateAsync();
+        // EnsureCreated creates the schema from the current model (SQLite-compatible).
+        // MigrateAsync cannot be used here because InitialCreate was written for SQL Server.
+        await context.Database.EnsureCreatedAsync();
 
         // Skip seeding entirely if already done
         bool rolesExist = await roleManager.RoleExistsAsync("Admin");

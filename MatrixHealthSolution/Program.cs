@@ -72,7 +72,6 @@ if (string.IsNullOrEmpty(app.Configuration["Stripe:SecretKey"]))
 if (string.IsNullOrEmpty(app.Configuration["Stripe:WebhookSecret"]))
     logger.LogWarning("Stripe:WebhookSecret is not configured. Webhook verification will fail.");
 
-app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
