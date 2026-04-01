@@ -103,7 +103,7 @@ public class AppointmentsController : Controller
             LastName = vm.LastName,
             Email = vm.Email,
             Phone = vm.Phone,
-            Notes = vm.Notes,
+            Notes = vm.Notes ?? string.Empty,
 
             DepositAmount = vm.DepositAmount,
             DepositPaid = false,

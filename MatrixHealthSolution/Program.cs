@@ -1,12 +1,21 @@
 using MatrixHealthSolution.Data;
 using MatrixHealthSolution.Data.Seed;
 using MatrixHealthSolution.Models.Identity;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Persist data protection keys to disk so auth cookies survive restarts/deploys
+var keysDir = new DirectoryInfo("/data/keys");
+keysDir.Create();
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(keysDir)
+    .SetApplicationName("MatrixHealthSolution");
 
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 //builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -71,6 +80,12 @@ if (string.IsNullOrEmpty(app.Configuration["Stripe:SecretKey"]))
     logger.LogWarning("Stripe:SecretKey is not configured. Payments will not work.");
 if (string.IsNullOrEmpty(app.Configuration["Stripe:WebhookSecret"]))
     logger.LogWarning("Stripe:WebhookSecret is not configured. Webhook verification will fail.");
+
+// Trust Render's reverse proxy so Request.Scheme = "https" and cookies are issued correctly
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
 app.UseStaticFiles();
 
