@@ -12,11 +12,15 @@ public class AppointmentsController : Controller
 {
     private readonly ApplicationDbContext _context;
     private readonly AppointmentSlotService _slots;
+    private readonly EmailService _email;
+    private readonly IConfiguration _config;
 
-    public AppointmentsController(ApplicationDbContext context, AppointmentSlotService slots)
+    public AppointmentsController(ApplicationDbContext context, AppointmentSlotService slots, EmailService email, IConfiguration config)
     {
         _context = context;
         _slots = slots;
+        _email = email;
+        _config = config;
     }
 
     // GET: /Appointments/Book
@@ -130,6 +134,56 @@ public class AppointmentsController : Controller
             vm.AvailableTimes = await _slots.GetAvailableSlotsAsync(vm.Date.Date, service.DurationMinutes);
             return View(vm);
         }
+
+        // Send emails (fire-and-forget — don't block or fail the booking if email is down)
+        _ = Task.Run(async () =>
+        {
+            var adminEmail = _config["Email:Admin"];
+            var dateStr = appt.ScheduledAt.ToString("dddd, MMMM d yyyy 'at' h:mm tt");
+
+            try
+            {
+                // Admin notification
+                if (!string.IsNullOrWhiteSpace(adminEmail))
+                {
+                    await _email.SendAsync(
+                        adminEmail,
+                        $"New Appointment: {appt.FirstName} {appt.LastName} — {dateStr}",
+                        $@"<h2>New Appointment Booked</h2>
+                           <p><strong>Client:</strong> {appt.FirstName} {appt.LastName}</p>
+                           <p><strong>Email:</strong> {appt.Email}</p>
+                           <p><strong>Phone:</strong> {appt.Phone}</p>
+                           <p><strong>Service:</strong> {service.Name}</p>
+                           <p><strong>Date & Time:</strong> {dateStr}</p>
+                           <p><strong>Duration:</strong> {appt.DurationMinutes} minutes</p>
+                           <p><strong>Deposit:</strong> ${appt.DepositAmount:0.00}</p>
+                           {(string.IsNullOrWhiteSpace(appt.Notes) ? "" : $"<p><strong>Notes:</strong> {appt.Notes}</p>")}"
+                    );
+                }
+            }
+            catch { /* Email failure should not affect the booking */ }
+
+            try
+            {
+                // Client confirmation
+                await _email.SendAsync(
+                    appt.Email,
+                    "Your Appointment is Confirmed — Matrix Health",
+                    $@"<h2>Appointment Confirmed</h2>
+                       <p>Hi {appt.FirstName},</p>
+                       <p>Your appointment has been successfully booked. Here are your details:</p>
+                       <table style='border-collapse:collapse; width:100%; max-width:500px;'>
+                         <tr><td style='padding:8px; border:1px solid #ddd;'><strong>Service</strong></td><td style='padding:8px; border:1px solid #ddd;'>{service.Name}</td></tr>
+                         <tr><td style='padding:8px; border:1px solid #ddd;'><strong>Date & Time</strong></td><td style='padding:8px; border:1px solid #ddd;'>{dateStr}</td></tr>
+                         <tr><td style='padding:8px; border:1px solid #ddd;'><strong>Duration</strong></td><td style='padding:8px; border:1px solid #ddd;'>{appt.DurationMinutes} minutes</td></tr>
+                         <tr><td style='padding:8px; border:1px solid #ddd;'><strong>Deposit</strong></td><td style='padding:8px; border:1px solid #ddd;'>${appt.DepositAmount:0.00}</td></tr>
+                       </table>
+                       <p style='margin-top:16px;'>If you need to reschedule or have any questions, please contact us.</p>
+                       <p>Thank you for choosing Matrix Health!</p>"
+                );
+            }
+            catch { /* Email failure should not affect the booking */ }
+        });
 
         return RedirectToAction(nameof(Deposit), new { id = appt.Id });
     }
