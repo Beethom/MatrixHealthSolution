@@ -2,7 +2,7 @@ using MatrixHealthSolution.Models;
 using MatrixHealthSolution.Models.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-        using MatrixHealthSolution.Models.Enums;
+using MatrixHealthSolution.Models.Enums;
 
 namespace MatrixHealthSolution.Data.Seed;
 
@@ -10,7 +10,8 @@ public static class DbSeeder
 {
     public static async Task SeedSampleDataAsync(ApplicationDbContext context,
         UserManager<ApplicationUser> userManager,
-        RoleManager<IdentityRole> roleManager)
+        RoleManager<IdentityRole> roleManager,
+        IConfiguration configuration)
     {
         // EnsureCreated creates the schema from the current model (SQLite-compatible).
         // MigrateAsync cannot be used here because InitialCreate was written for SQL Server.
@@ -36,6 +37,18 @@ public static class DbSeeder
         string adminEmail = "admin@matrixhealth.com";
         if (await userManager.FindByEmailAsync(adminEmail) == null)
         {
+            var adminPassword = configuration["Seeder:AdminPassword"];
+            if (string.IsNullOrWhiteSpace(adminPassword))
+            {
+                // Generate a one-time random password and print it clearly so it can be saved
+                adminPassword = $"Mhx-{Guid.NewGuid():N}".Substring(0, 20) + "!";
+                Console.WriteLine("==========================================================");
+                Console.WriteLine($"  ADMIN PASSWORD (save this now): {adminPassword}");
+                Console.WriteLine("  Set Seeder:AdminPassword in your environment to avoid");
+                Console.WriteLine("  a new password being generated on each fresh deployment.");
+                Console.WriteLine("==========================================================");
+            }
+
             var admin = new ApplicationUser
             {
                 UserName = adminEmail,
@@ -44,7 +57,7 @@ public static class DbSeeder
                 LastName = "User",
                 EmailConfirmed = true
             };
-            await userManager.CreateAsync(admin, "Admin123!"); // temporary password
+            await userManager.CreateAsync(admin, adminPassword);
             await userManager.AddToRoleAsync(admin, "Admin");
         }
 

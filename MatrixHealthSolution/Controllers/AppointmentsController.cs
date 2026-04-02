@@ -2,9 +2,11 @@ using MatrixHealthSolution.Data;
 using MatrixHealthSolution.Models;
 using MatrixHealthSolution.Models.ViewModels;
 using MatrixHealthSolution.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Encodings.Web;
 
 namespace MatrixHealthSolution.Controllers;
 
@@ -140,6 +142,16 @@ public class AppointmentsController : Controller
         {
             var adminEmail = _config["Email:Admin"];
             var dateStr = appt.ScheduledAt.ToString("dddd, MMMM d yyyy 'at' h:mm tt");
+            var enc = HtmlEncoder.Default;
+
+            var firstName   = enc.Encode(appt.FirstName);
+            var lastName    = enc.Encode(appt.LastName);
+            var email       = enc.Encode(appt.Email);
+            var phone       = enc.Encode(appt.Phone ?? "");
+            var serviceName = enc.Encode(service.Name);
+            var notesHtml   = string.IsNullOrWhiteSpace(appt.Notes)
+                ? ""
+                : $"<p><strong>Notes:</strong> {enc.Encode(appt.Notes)}</p>";
 
             try
             {
@@ -150,14 +162,14 @@ public class AppointmentsController : Controller
                         adminEmail,
                         $"New Appointment: {appt.FirstName} {appt.LastName} — {dateStr}",
                         $@"<h2>New Appointment Booked</h2>
-                           <p><strong>Client:</strong> {appt.FirstName} {appt.LastName}</p>
-                           <p><strong>Email:</strong> {appt.Email}</p>
-                           <p><strong>Phone:</strong> {appt.Phone}</p>
-                           <p><strong>Service:</strong> {service.Name}</p>
-                           <p><strong>Date & Time:</strong> {dateStr}</p>
+                           <p><strong>Client:</strong> {firstName} {lastName}</p>
+                           <p><strong>Email:</strong> {email}</p>
+                           <p><strong>Phone:</strong> {phone}</p>
+                           <p><strong>Service:</strong> {serviceName}</p>
+                           <p><strong>Date &amp; Time:</strong> {dateStr}</p>
                            <p><strong>Duration:</strong> {appt.DurationMinutes} minutes</p>
                            <p><strong>Deposit:</strong> ${appt.DepositAmount:0.00}</p>
-                           {(string.IsNullOrWhiteSpace(appt.Notes) ? "" : $"<p><strong>Notes:</strong> {appt.Notes}</p>")}"
+                           {notesHtml}"
                     );
                 }
             }
@@ -170,11 +182,11 @@ public class AppointmentsController : Controller
                     appt.Email,
                     "Your Appointment is Confirmed — Matrix Health",
                     $@"<h2>Appointment Confirmed</h2>
-                       <p>Hi {appt.FirstName},</p>
+                       <p>Hi {firstName},</p>
                        <p>Your appointment has been successfully booked. Here are your details:</p>
                        <table style='border-collapse:collapse; width:100%; max-width:500px;'>
-                         <tr><td style='padding:8px; border:1px solid #ddd;'><strong>Service</strong></td><td style='padding:8px; border:1px solid #ddd;'>{service.Name}</td></tr>
-                         <tr><td style='padding:8px; border:1px solid #ddd;'><strong>Date & Time</strong></td><td style='padding:8px; border:1px solid #ddd;'>{dateStr}</td></tr>
+                         <tr><td style='padding:8px; border:1px solid #ddd;'><strong>Service</strong></td><td style='padding:8px; border:1px solid #ddd;'>{serviceName}</td></tr>
+                         <tr><td style='padding:8px; border:1px solid #ddd;'><strong>Date &amp; Time</strong></td><td style='padding:8px; border:1px solid #ddd;'>{dateStr}</td></tr>
                          <tr><td style='padding:8px; border:1px solid #ddd;'><strong>Duration</strong></td><td style='padding:8px; border:1px solid #ddd;'>{appt.DurationMinutes} minutes</td></tr>
                          <tr><td style='padding:8px; border:1px solid #ddd;'><strong>Deposit</strong></td><td style='padding:8px; border:1px solid #ddd;'>${appt.DepositAmount:0.00}</td></tr>
                        </table>
@@ -222,9 +234,10 @@ public class AppointmentsController : Controller
         return View(appt); // Views/Appointments/Deposit.cshtml
     }
 
-    // POST: /Appointments/MarkDepositPaid/5 (TEMP button until Stripe)
+    // POST: /Appointments/MarkDepositPaid/5 (TEMP — admin-only until Stripe is wired up)
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> MarkDepositPaid(int id)
     {
         var appt = await _context.Appointments.FindAsync(id);

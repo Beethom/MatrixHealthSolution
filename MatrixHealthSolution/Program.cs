@@ -66,7 +66,8 @@ using (var scope = app.Services.CreateScope())
 
     try
     {
-        await DbSeeder.SeedSampleDataAsync(context, userManager, roleManager);
+        var config = services.GetRequiredService<IConfiguration>();
+        await DbSeeder.SeedSampleDataAsync(context, userManager, roleManager, config);
         Console.WriteLine("Database seeding completed!");
     }
     catch (Exception ex)
@@ -86,6 +87,10 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 });
+
+// Redirect HTTP → HTTPS. Placed after ForwardedHeaders so the scheme is already
+// set to "https" when behind Render's proxy, preventing redirect loops.
+app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 

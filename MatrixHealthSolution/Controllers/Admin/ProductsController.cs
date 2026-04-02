@@ -41,7 +41,17 @@ namespace MatrixHealthSolution.Controllers.Admin
                 return View("~/Views/Admin/Products/Create.cshtml", product);
 
             if (imageFile != null && imageFile.Length > 0)
-                product.ImagePath = await SaveProductImageAsync(imageFile);
+            {
+                try
+                {
+                    product.ImagePath = await SaveProductImageAsync(imageFile);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    ModelState.AddModelError("imageFile", ex.Message);
+                    return View("~/Views/Admin/Products/Create.cshtml", product);
+                }
+            }
 
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
@@ -74,11 +84,19 @@ namespace MatrixHealthSolution.Controllers.Admin
             // Replace image if new one uploaded
             if (imageFile != null && imageFile.Length > 0)
             {
-                // delete old
-                if (!string.IsNullOrWhiteSpace(dbProduct.ImagePath))
-                    DeleteFileIfExists(dbProduct.ImagePath);
-
-                product.ImagePath = await SaveProductImageAsync(imageFile);
+                try
+                {
+                    // delete old only after the new one is validated
+                    var newPath = await SaveProductImageAsync(imageFile);
+                    if (!string.IsNullOrWhiteSpace(dbProduct.ImagePath))
+                        DeleteFileIfExists(dbProduct.ImagePath);
+                    product.ImagePath = newPath;
+                }
+                catch (InvalidOperationException ex)
+                {
+                    ModelState.AddModelError("imageFile", ex.Message);
+                    return View("~/Views/Admin/Products/Edit.cshtml", product);
+                }
             }
 
             _context.Products.Update(product);
@@ -112,27 +130,39 @@ namespace MatrixHealthSolution.Controllers.Admin
             return RedirectToAction(nameof(Index));
         }
 
+        private static readonly Dictionary<string, string> _allowedImageTypes = new()
+        {
+            { "image/jpeg", ".jpg" },
+            { "image/png",  ".png" },
+            { "image/webp", ".webp" },
+        };
+
         private async Task<string> SaveProductImageAsync(IFormFile file)
         {
-            // basic type checks
-            var allowed = new[] { "image/jpeg", "image/png", "image/webp" };
-            if (!allowed.Contains(file.ContentType))
-                throw new InvalidOperationException("Only JPG, PNG, or WEBP images are allowed.");
-
             if (file.Length > 5 * 1024 * 1024)
                 throw new InvalidOperationException("Max image size is 5MB.");
+
+            // Validate MIME type
+            if (!_allowedImageTypes.TryGetValue(file.ContentType, out var expectedExt))
+                throw new InvalidOperationException("Only JPG, PNG, or WEBP images are allowed.");
+
+            // Validate extension matches the declared MIME type (prevents .php disguised as image/jpeg)
+            var uploadedExt = Path.GetExtension(file.FileName).ToLowerInvariant();
+            var jpegAliases = new[] { ".jpg", ".jpeg" };
+            bool extOk = expectedExt == uploadedExt
+                || (expectedExt == ".jpg" && jpegAliases.Contains(uploadedExt));
+            if (!extOk)
+                throw new InvalidOperationException("File extension does not match the image type.");
 
             var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "products");
             Directory.CreateDirectory(uploadsFolder);
 
-            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-            var fileName = $"{Guid.NewGuid():N}{ext}";
+            var fileName = $"{Guid.NewGuid():N}{expectedExt}";
             var fullPath = Path.Combine(uploadsFolder, fileName);
 
             await using var stream = new FileStream(fullPath, FileMode.Create);
             await file.CopyToAsync(stream);
 
-            // Return web path
             return $"/uploads/products/{fileName}";
         }
 
